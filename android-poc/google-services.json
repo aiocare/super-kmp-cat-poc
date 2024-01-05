@@ -1,0 +1,439 @@
+{
+  "project_info": {
+    "project_number": "806765230387",
+    "firebase_url": "https://myspiroo.firebaseio.com",
+    "project_id": "myspiroo",
+    "storage_bucket": "myspiroo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:050592803a5edf08506646",
+        "android_client_info": {
+          "package_name": "com.aiocare.super_cat_poc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:d8b048d7ae741134",
+        "android_client_info": {
+          "package_name": "com.healthup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-37gk14bupalku8e54qglt85f2t6i1jj0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.healthup",
+            "certificate_hash": "171a1eb1911661016321e9929a6a297dbdc39220"
+          }
+        },
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:becba8af57c23936",
+        "android_client_info": {
+          "package_name": "com.healthup.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-kn9qi4hbk0vtan64dbf96cdsq3gdhhop.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.healthup.debug",
+            "certificate_hash": "f644ad58bdc84fc2cc4fd9a384b1ebedd6d6ebda"
+          }
+        },
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:dbdabfc57ccad619506646",
+        "android_client_info": {
+          "package_name": "com.healthup.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:01704d1db3571eb3506646",
+        "android_client_info": {
+          "package_name": "com.healthup.dev.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:62c26a200fd6429b",
+        "android_client_info": {
+          "package_name": "com.healthup.doctor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-if701a58259ap5c9ii3e2205ll55hqt7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.healthup.doctor",
+            "certificate_hash": "1435dd88be3ab08d17b2efe65aa80b971838e2fc"
+          }
+        },
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:3ffdc2f18dcad4c1",
+        "android_client_info": {
+          "package_name": "com.healthup.doctor.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-ps4dug2t32r2g5jpvs70ld80p1rf3vpm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.healthup.doctor.debug",
+            "certificate_hash": "1435dd88be3ab08d17b2efe65aa80b971838e2fc"
+          }
+        },
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:4e281aad3865b8aa506646",
+        "android_client_info": {
+          "package_name": "com.healthup.doctor.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:a57e33ee9dd2d7f5506646",
+        "android_client_info": {
+          "package_name": "com.healthup.doctor.dev.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:d7e2ceb9bf3a917c506646",
+        "android_client_info": {
+          "package_name": "com.healthup.doctor.usa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806765230387:android:40898d9f4deb54cc506646",
+        "android_client_info": {
+          "package_name": "com.healthup.doctor.usa.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi2M49ez35_a8GCB_Lwd04Cx2I413z9fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806765230387-6vqo0trbp97venemqsno2etcqlcdq9ir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806765230387-0r0v4g1c1neaub14grl5sgseofvb6vpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aiocare.super.roids.clients"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

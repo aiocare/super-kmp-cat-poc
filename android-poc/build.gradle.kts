@@ -1,18 +1,25 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
     namespace = "com.aiocare.super_cat_poc"
     compileSdk = 33
 
+    buildFeatures {
+        buildConfig = true
+    }
+
+
     defaultConfig {
         applicationId = "com.aiocare.super_cat_poc"
         minSdk = 24
         targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -50,7 +57,9 @@ android {
 }
 
 dependencies {
-
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.aiocare.sdk:spirometer-sdk:+")
     implementation(project(mapOf("path" to ":examination")))
     implementation("androidx.core:core-ktx:1.10.1")

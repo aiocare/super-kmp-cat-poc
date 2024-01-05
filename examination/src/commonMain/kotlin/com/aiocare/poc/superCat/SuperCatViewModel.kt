@@ -5,6 +5,7 @@ import com.aiocare.model.WaveformData
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
+import com.aiocare.poc.VersionHolder
 import com.aiocare.poc.calibration.EnvironmentalData
 import com.aiocare.poc.calibration.GraphObjects
 import com.aiocare.poc.ktor.Api
@@ -404,7 +405,7 @@ class SuperCatViewModel(
                 hansIpAddress = uiState.url?.value ?: "hans",
                 hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
                 hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
-                appVersion = "1.0.1",
+                appVersion = VersionHolder.version,
                 spirometerDeviceSerial = deviceName,
                 operator = operator,
                 date = calculateDate()
