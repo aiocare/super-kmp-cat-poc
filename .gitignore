@@ -28,7 +28,7 @@ hs_err_pid*
 /.idea
 /examination/build
 /cortex/build
-/spirometer-sdk/build
+/android-poc/build
 
 local.properties
 secrets.properties
