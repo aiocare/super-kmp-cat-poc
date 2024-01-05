@@ -12,7 +12,3 @@ building:
 ```
 gradlew assemble
 ```
-publishing new version:
-```
-gradlew publish
-```
