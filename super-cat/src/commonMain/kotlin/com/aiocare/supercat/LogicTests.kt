@@ -33,12 +33,11 @@ class LogicTests(private val hostAddress: String) {
                 HansCommand.volume(Units.VolumeUnit.LITER(7.0)),
                 HansCommand.reset(),
                 HansCommand.volume(Units.VolumeUnit.LITER(8.0)),
-                HansCommand.reset(),
+                HansCommand.reset()
             )
 
             api.command(HansCommand.volume(Units.VolumeUnit.LITER(0.0)))
             api.command(HansCommand.reset())
-
 
             val singleTime = measureTimedValue {
                 single.forEach {
@@ -48,7 +47,6 @@ class LogicTests(private val hostAddress: String) {
 
             api.command(HansCommand.volume(Units.VolumeUnit.LITER(0.0)))
             api.command(HansCommand.reset())
-
 
             val multipleTime = measureTimedValue {
                 multiple.forEach {

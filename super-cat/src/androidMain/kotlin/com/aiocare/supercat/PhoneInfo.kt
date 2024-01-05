@@ -3,14 +3,13 @@ package com.aiocare.supercat
 import android.os.Build
 import java.util.Locale
 
-
 actual class PhoneInfo : IPhoneInfo {
 
     override fun getPhoneModel(): String {
         val manufacturer = Build.MANUFACTURER
         val model = Build.MODEL
         return if (model.lowercase(Locale.getDefault())
-                .startsWith(manufacturer.lowercase(Locale.getDefault()))
+            .startsWith(manufacturer.lowercase(Locale.getDefault()))
         ) {
             capitalize(model)
         } else {

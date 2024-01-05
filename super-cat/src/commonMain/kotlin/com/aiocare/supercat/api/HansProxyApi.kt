@@ -27,12 +27,12 @@ class HansProxyApi(private val hostAddress: String) {
     }
 
     suspend fun isConnected(): Boolean {
-        val response = httpClient.get("${hostAddress}/serial/status").status
+        val response = httpClient.get("$hostAddress/serial/status").status
         return response.isSuccess()
     }
 
     suspend fun getAvailablePorts(): List<String> {
-        val response = httpClient.get("${hostAddress}/serial/find").bodyAsText()
+        val response = httpClient.get("$hostAddress/serial/find").bodyAsText()
         return response
             .substring(1, response.length - 1)
             .split(",")
@@ -40,13 +40,13 @@ class HansProxyApi(private val hostAddress: String) {
     }
 
     suspend fun connect(comName: String): Boolean {
-        val response = httpClient.get("${hostAddress}/serial/connect/${comName}").status
+        val response = httpClient.get("$hostAddress/serial/connect/$comName").status
         return response.isSuccess()
     }
 
     suspend fun command(hansCommand: HansCommand): Response {
         val responseText =
-            httpClient.get("${hostAddress}/command/${hansCommand.command}").bodyAsText()
+            httpClient.get("$hostAddress/command/${hansCommand.command}").bodyAsText()
                 .removeSuffix("\r")
         return when (responseText) {
             Response.NoInteractive.OK.key -> Response.NoInteractive.OK
@@ -57,7 +57,7 @@ class HansProxyApi(private val hostAddress: String) {
 
     suspend fun waveform(hansCommand: HansCommand): Response {
         val responseText =
-            httpClient.get("${hostAddress}/waveform/${hansCommand.command}").bodyAsText()
+            httpClient.get("$hostAddress/waveform/${hansCommand.command}").bodyAsText()
                 .removeSuffix("\r")
         return when (responseText) {
             Response.NoInteractive.OK.key -> Response.NoInteractive.OK

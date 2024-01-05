@@ -33,5 +33,5 @@ fun readSecrets(name: String): String {
 
 rootProject.name = "super-kmp-cat-poc"
 include(":super-cat")
-include(":example")
+include(":android-poc")
 include(":examination")

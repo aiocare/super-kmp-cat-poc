@@ -60,7 +60,8 @@ class Logic(private val hostAddress: String) {
                 exhaleAction = {
                     api.waveform(HansCommand.waveform(it))
                 },
-                inhaleAction = {})
+                inhaleAction = {}
+            )
         }
     }
 
@@ -91,13 +92,13 @@ class Logic(private val hostAddress: String) {
             var wfd: WaveformData? = null
             while (wfd == null) {
                 try {
-
                     val recordedRawSignal = mutableListOf<Int>()
                     var recordJob: Job?
                     if (it.name != null) {
                         log("before ${it.name}")
-                    } else
+                    } else {
                         log("before ${it.flow.value}")
+                    }
                     it.beforeAction.invoke()
                     coroutineScope {
                         recordJob = launch {
@@ -109,8 +110,9 @@ class Logic(private val hostAddress: String) {
                         }
                         if (it.name != null) {
                             log(it.name)
-                        } else
+                        } else {
                             log("exhale ${it.flow.value}")
+                        }
                         it.exhaleAction.invoke()
                         recordJob?.cancelAndJoin()
                         val sendSpirometryResult =
@@ -133,7 +135,6 @@ class Logic(private val hostAddress: String) {
             wfd!!
         }
     }
-
 
     suspend fun processSequence(
         actions: List<CalibrationActions>,
@@ -183,7 +184,6 @@ class Logic(private val hostAddress: String) {
                             )
                         }
                     }
-
                 } catch (e: Exception) {
                     api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
                     api.command(HansCommand.reset())
@@ -197,7 +197,7 @@ class Logic(private val hostAddress: String) {
     fun prepareC1C11(repeat: Int): List<CalibrationActions> {
         return (1..11).map {
             CalibrationActions(
-                name = "C${it}",
+                name = "C$it",
                 flow = Units.FlowUnit.L_S(it.toDouble()),
                 volume = Units.VolumeUnit.LITER(it.toDouble()),
                 beforeAction = {
@@ -205,9 +205,10 @@ class Logic(private val hostAddress: String) {
                     api.command(HansCommand.reset())
                 },
                 exhaleAction = {
-                    api.waveform(HansCommand.waveform("C${it}"))
+                    api.waveform(HansCommand.waveform("C$it"))
                 },
-                inhaleAction = {})
+                inhaleAction = {}
+            )
         }.times(repeat)
     }
 

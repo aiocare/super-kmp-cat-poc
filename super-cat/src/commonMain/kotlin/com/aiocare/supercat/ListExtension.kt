@@ -7,4 +7,3 @@ fun <T> List<T>.times(times: Int): List<T> {
     }
     return list
 }
-
