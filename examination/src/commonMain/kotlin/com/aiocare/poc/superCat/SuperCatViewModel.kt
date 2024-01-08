@@ -38,6 +38,7 @@ data class SuperCatUiState(
     val devices: List<DeviceItem> = listOf(),
     val loading: Boolean = false,
     val url: InputData? = null,
+    val note: InputData? = null,
     val hansSerial: InputData? = null,
     val pefBtn: ButtonVM = ButtonVM(visible = false, text = "pef"),
     val disconnectBtn: ButtonVM = ButtonVM(visible = false, text = "disconnect"),
@@ -123,6 +124,10 @@ class SuperCatViewModel(
                     "http://192.168.1.217:8080",
                     "url",
                     onValueChanged = { v -> updateUiState { copy(url = url?.copy(value = v)) } }),
+                note = InputData(
+                    "",
+                    "note",
+                    onValueChanged = { v -> updateUiState { copy(note = note?.copy(value = v)) } }),
                 hansSerial = InputData(
                     "112-093",
                     "HansSerial",
@@ -143,7 +148,7 @@ class SuperCatViewModel(
     private fun prepareInitDialog() {
         updateUiState {
             copy(initDataDialog = InitDialogData(
-                hansName = listOf("112-121", "112-093").map { current ->
+                hansName = listOf("112-121", "112-093", "112-123").map { current ->
                     ButtonVM(true, current, {
                         updateUiState {
                             copy(
@@ -153,7 +158,7 @@ class SuperCatViewModel(
                         }
                     })
                 },
-                address = listOf("192.168.1.203:8080", "192.168.1.217:8080").map { current ->
+                address = listOf("192.168.1.203:8080", "192.168.1.217:8080", "192.168.1.183:8080").map { current ->
                     ButtonVM(true, current, {
                         updateUiState {
                             copy(
@@ -163,7 +168,7 @@ class SuperCatViewModel(
                         }
                     })
                 },
-                operator = listOf("Piotr", "Milena", "Szymon").map {
+                operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
                     ButtonVM(true, it, {
                         operator = it
                         updateUiState {
@@ -426,7 +431,8 @@ class SuperCatViewModel(
             steadyFlowRawData = steadyFlowRawData,
             waveformRawData = waveformRawData,
             type = name,
-            rawDataType = rawDataType.name
+            rawDataType = rawDataType.name,
+            notes = uiState.note?.value?:""
         )
         trySendToApi(request)
     }

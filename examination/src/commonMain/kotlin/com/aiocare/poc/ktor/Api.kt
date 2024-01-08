@@ -83,7 +83,8 @@ class Api {
         val steadyFlowRawData: List<SteadyFlowData>?,
         val waveformRawData: List<WaveformData>?,
         val type: String,
-        val rawDataType: String
+        val rawDataType: String,
+        val notes: String
     )
 
     @Serializable

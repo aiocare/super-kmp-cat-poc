@@ -78,6 +78,7 @@ fun SuperCatScreen(viewModel: SuperCatViewModel) {
         listOfNotNull(
             viewModel.uiState.url,
             viewModel.uiState.hansSerial,
+            viewModel.uiState.note,
         )
             .forEach { data ->
                 TextField(
