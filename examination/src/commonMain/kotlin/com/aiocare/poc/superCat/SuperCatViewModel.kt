@@ -330,9 +330,9 @@ class SuperCatViewModel(
             updateSequenceName(name)
             Logic(uiState.url!!.value).apply {
                 val zf = zeroFlow()
-                val out = processWaveform(sequence, device!!, 1) {
+                val out = processWaveform(sequence, device!!, 1, {
                     updateProgress(it)
-                }
+                }, { Clock.System.now().toEpochMilliseconds() })
                 processSending(zf, null, out, name, RawDataType.WAVEFORM)
             }
         } catch (e: Exception) {

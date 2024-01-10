@@ -84,7 +84,8 @@ class Logic(private val hostAddress: String) {
         actions: List<CalibrationActions>,
         device: IAioCareDevice,
         repeat: Int,
-        log: (String) -> Unit
+        log: (String) -> Unit,
+        getTime: () -> Long
     ): List<WaveformData> {
         val preparedActions = actions.map { action -> List(repeat) { action } }.flatten()
         log("action size = ${preparedActions.size}")
@@ -123,7 +124,8 @@ class Logic(private val hostAddress: String) {
                         wfd = WaveformData(
                             name = it.name ?: "no name",
                             rawSignal = recordedRawSignal,
-                            hansCalculatedValues = sendSpirometryResult
+                            hansCalculatedValues = sendSpirometryResult,
+                            timestamp = getTime()
                         )
                     }
                 } catch (e: Exception) {
