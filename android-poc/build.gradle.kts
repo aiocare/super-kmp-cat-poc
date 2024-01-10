@@ -19,7 +19,7 @@ android {
         minSdk = 24
         targetSdk = 33
         versionCode = 2
-        versionName = "2.0.5"
+        versionName = "2.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -60,7 +60,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.aiocare.sdk:spirometer-sdk:0.0.6")
+    implementation("com.aiocare.sdk:spirometer-sdk:0.0.8")
     implementation(project(mapOf("path" to ":examination")))
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
