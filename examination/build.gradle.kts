@@ -33,7 +33,7 @@ kotlin {
     cocoapods {
         summary = "Some description for the Shared Module"
         homepage = "Link to the Shared Module homepage"
-        version = "2.0.3"
+        version = "2.0.4"
         ios.deploymentTarget = "14.1"
         framework {
             baseName = "examination"
@@ -44,7 +44,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
 
-                implementation("com.aiocare.sdk:spirometer-sdk:0.0.4")
+                implementation("com.aiocare.sdk:spirometer-sdk:0.0.5")
                 implementation(project(":super-cat"))
                 implementation("com.aiocare.cortex:cortex:+")
                 implementation("com.aiocare.models:common-models:1.0.4")
