@@ -17,6 +17,7 @@ import com.aiocare.sdk.connecting.getIConnectMobile
 import com.aiocare.sdk.scan.getIScan
 import com.aiocare.sdk.services.readBattery
 import com.aiocare.sdk.services.readFlow
+import com.aiocare.sdk.services.readHardware
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
 import com.aiocare.sdk.services.readTemperature
@@ -492,6 +493,8 @@ class SuperCatViewModel(
 
         while (temperature == null || pressure == null || humidity == null || batt == null) {
             try {
+                println("___________________________")
+                println(device?.readHardware())
                 withTimeout(5000) {
                     delay(400)
                     updateProgress("collecting after..... temperature")
@@ -506,6 +509,7 @@ class SuperCatViewModel(
                     batt = device?.readBattery()
                 }
             } catch (e: Exception) {
+                e.toString()
                 updateProgress("try again...")
             }
         }

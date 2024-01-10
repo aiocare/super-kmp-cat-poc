@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.aiocare.supercat"
-version = "2.0.4"
+version = "2.0.5"
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
@@ -65,7 +65,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("com.aiocare.sdk:spirometer-sdk:0.0.5")
+                implementation("com.aiocare.sdk:spirometer-sdk:0.0.6")
                 implementation("com.aiocare.models:common-models:+")
                 implementation("com.juul.kable:core:0.25.1")
                 implementation("com.squareup.okio:okio:3.5.0")
