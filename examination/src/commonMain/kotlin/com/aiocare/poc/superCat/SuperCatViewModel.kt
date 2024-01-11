@@ -94,6 +94,7 @@ class SuperCatViewModel(
 
     private var scanJob: Job? = null
     private var timerJob: Job? = null
+    private var actionJob: Job? = null
     private var device: IAioCareDevice? = null
     private var deviceName = ""
     private var beforeTime: Long? = null
@@ -195,12 +196,32 @@ class SuperCatViewModel(
         }
     }
 
+    private fun startObservingState(){
+        viewModelScope.launch {
+            getIConnect().getConnectedFlow().collect{
+                if(!it){
+                 actionJob?.cancelAndJoin()
+                    timerJob?.cancelAndJoin()
+                    device = null
+                    deviceName = ""
+                    updateProgress("disconnect")
+                    updateSequenceName("")
+                        startSearching()
+                        updateUiState {
+                            copy(after = "", before = EnvironmentalData(), measurementTimer = 0)
+                        }
+                }
+            }
+        }
+    }
+
     private fun scanClicked(scan: IAioCareScan) {
         viewModelScope.launch {
             deviceName = scan.getName()
             updateLoader(true)
             device = getIConnectMobile().connectMobile(this, scan)
             scanJob?.cancelAndJoin()
+            startObservingState()
             updateUiState {
                 copy(
                     devices = listOf(),
@@ -275,10 +296,12 @@ class SuperCatViewModel(
         updateProgress("disconnect")
         updateSequenceName("")
         viewModelScope.launch {
+            timerJob?.cancelAndJoin()
+            actionJob?.cancelAndJoin()
             getIConnect().disconnect()
             startSearching()
             updateUiState {
-                copy(after = "", before = EnvironmentalData())
+                copy(after = "", before = EnvironmentalData(), measurementTimer = 0)
             }
         }
     }
@@ -291,7 +314,8 @@ class SuperCatViewModel(
 
     private fun pef(repeat: Int) {
         clearDialog()
-        viewModelScope.launch {
+        actionJob?.cancel()
+        actionJob = viewModelScope.launch {
             loadEnv()
             handleWaveform(
                 Logic(uiState.url!!.value).preparePef(repeat),
@@ -302,7 +326,8 @@ class SuperCatViewModel(
 
     private fun v7(repeat: Int) {
         clearDialog()
-        viewModelScope.launch {
+        actionJob?.cancel()
+        actionJob = viewModelScope.launch {
             loadEnv()
             handleSequence(Logic(uiState.url!!.value).v7(repeat))
         }
@@ -310,7 +335,8 @@ class SuperCatViewModel(
 
     private fun c1c11(repeat: Int) {
         clearDialog()
-        viewModelScope.launch {
+        actionJob?.cancel()
+        actionJob = viewModelScope.launch {
             loadEnv()
             handleWaveform(
                 Logic(uiState.url!!.value).prepareC1C11(repeat),
@@ -435,7 +461,7 @@ class SuperCatViewModel(
             rawDataType = rawDataType.name,
             notes = uiState.note?.value?:""
         )
-        trySendToApi(request)
+//        trySendToApi(request)
     }
 
     private suspend fun trySendToApi(request: Api.PostData) {
@@ -457,11 +483,10 @@ class SuperCatViewModel(
         }
     }
 
-    private fun handleSequence(sequence: List<Logic.CalibrationActions>) {
+    private suspend fun handleSequence(sequence: List<Logic.CalibrationActions>) {
         try {
             updateSequenceName("calibrationSequence")
             startCalculatingSeconds()
-            viewModelScope.launch {
                 Logic(uiState.url!!.value).apply {
                     val zf = zeroFlow()
                     val out = processSequence(sequence, device!!, 1) {
@@ -474,7 +499,6 @@ class SuperCatViewModel(
                         RecordingType.CALIBRATION_SEQUENCE.name,
                         RawDataType.STEADY_FLOW
                     )
-                }
             }
         } catch (e: Exception) {
             updateProgress(e.message ?: e.toString())
@@ -543,7 +567,7 @@ class SuperCatViewModel(
         updateUiState {
             it.copy(measurementTimer = 0)
         }
-
+        timerJob?.cancel()
         timerJob = GlobalScope.launch {
             while (true) {
                 delay(1000)
