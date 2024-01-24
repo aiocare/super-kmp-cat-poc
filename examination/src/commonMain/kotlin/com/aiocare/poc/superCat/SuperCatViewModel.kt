@@ -41,10 +41,8 @@ data class SuperCatUiState(
     val url: InputData? = null,
     val note: InputData? = null,
     val hansSerial: InputData? = null,
-    val pefBtn: ButtonVM = ButtonVM(visible = false, text = "pef"),
     val disconnectBtn: ButtonVM = ButtonVM(visible = false, text = "disconnect"),
-    val v7Btn: ButtonVM = ButtonVM(visible = false, text = "V7"),
-    val c1c11Btn: ButtonVM = ButtonVM(visible = false, text = "c1-c11"),
+    val examBtn: ButtonVM = ButtonVM(visible = false, text = "exams"),
     val envBtn: ButtonVM = ButtonVM(visible = false, text = "env"),
     val envAfterBtn: ButtonVM = ButtonVM(visible = false, text = "batt"),
     val info: String = "",
@@ -53,6 +51,7 @@ data class SuperCatUiState(
     val graphObjects: GraphObjects = GraphObjects(),
     val before: EnvironmentalData = EnvironmentalData(),
     val battery: Int? = null,
+    val examDialogData: ExamDialogData? = null,
     val after: String = "",
     val currentSequence: String = "",
     val playMusicSuccess: Boolean = false,
@@ -65,6 +64,11 @@ data class SuperCatUiState(
 
 data class RepeatDialogData(
     val repeatCounter: List<ButtonVM> = listOf(),
+    val close: () -> Unit
+)
+
+data class ExamDialogData(
+    val exam: List<ButtonVM> = listOf(),
     val close: () -> Unit
 )
 
@@ -225,50 +229,74 @@ class SuperCatViewModel(
             updateUiState {
                 copy(
                     devices = listOf(),
-                    v7Btn = v7Btn.copy(
+                    examBtn = examBtn.copy(
                         visible = true,
                         onClickAction = {
                             updateUiState {
-                                copy(
-                                    repeatDialog = RepeatDialogData(
-                                        (1..5).map { ButtonVM(true, "${it}") { v7(it) } }
-                                    ) {
-                                        updateUiState { copy(repeatDialog = null) }
+                                copy(examDialogData = ExamDialogData(
+                                    listOf(
+                                        ButtonVM(true, "v7") {
+                                            updateUiState {
+                                                copy(
+                                                    examDialogData = null,
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(
+                                                                true,
+                                                                "${it}"
+                                                            ) { v7(it) }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        },
+                                        ButtonVM(true, "c1-c11") {
+                                            updateUiState {
+                                                copy(
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(
+                                                                true,
+                                                                "${it}"
+                                                            ) { c1c11(it) }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        },
+                                        ButtonVM(true, "pef") {
+                                            updateUiState {
+                                                copy(
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(true, "${it}") {
+                                                                pef(it)
+                                                            }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        },
+                                    )
+                                ) {
+                                    updateUiState {
+                                        copy(examDialogData = null)
                                     }
-                                )
+                                })
                             }
-                        }),
+                        }
+                    ),
                     envBtn = envBtn.copy(
                         visible = true,
                         onClickAction = {
                             viewModelScope.launch {
                                 loadEnv()
-                            }
-                        }),
-                    c1c11Btn = c1c11Btn.copy(
-                        visible = true,
-                        onClickAction = {
-                            updateUiState {
-                                copy(
-                                    repeatDialog = RepeatDialogData(
-                                        (1..5).map { ButtonVM(true, "${it}") { c1c11(it) } }
-                                    ) {
-                                        updateUiState { copy(repeatDialog = null) }
-                                    }
-                                )
-                            }
-                        }),
-                    pefBtn = pefBtn.copy(
-                        visible = true,
-                        onClickAction = {
-                            updateUiState {
-                                copy(
-                                    repeatDialog = RepeatDialogData(
-                                        (1..5).map { ButtonVM(true, "${it}") { pef(it) } }
-                                    ) {
-                                        updateUiState { copy(repeatDialog = null) }
-                                    }
-                                )
                             }
                         }),
                     envAfterBtn = envAfterBtn.copy(
@@ -460,8 +488,8 @@ class SuperCatViewModel(
             type = name,
             rawDataType = rawDataType.name,
             notes = uiState.note?.value?:""
-        )
-//        trySendToApi(request)
+         )
+        trySendToApi(request)
     }
 
     private suspend fun trySendToApi(request: Api.PostData) {

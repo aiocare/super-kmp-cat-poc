@@ -95,12 +95,10 @@ fun SuperCatScreen(viewModel: SuperCatViewModel) {
                 .fillMaxWidth()
                 .horizontalScroll(scrollState)
         ) {
+            SimpleButton(buttonVM = viewModel.uiState.examBtn)
             SimpleButton(buttonVM = viewModel.uiState.disconnectBtn)
             SimpleButton(buttonVM = viewModel.uiState.envBtn)
             SimpleButton(buttonVM = viewModel.uiState.envAfterBtn)
-            SimpleButton(buttonVM = viewModel.uiState.v7Btn)
-            SimpleButton(buttonVM = viewModel.uiState.c1c11Btn)
-            SimpleButton(buttonVM = viewModel.uiState.pefBtn)
         }
         Text(text = viewModel.uiState.currentSequence)
         Text(text = viewModel.uiState.measurementTimer.parseTime())
@@ -114,6 +112,28 @@ fun SuperCatScreen(viewModel: SuperCatViewModel) {
         RepeatDialog(viewModel.uiState.repeatDialog)
         TryAgainDialog(viewModel.uiState.repeatSendingDialog)
         InitDialog(viewModel.uiState.initDataDialog)
+        ExamDialog(viewModel.uiState.examDialogData)
+    }
+}
+
+@Composable
+fun ExamDialog(examDialogData: ExamDialogData?) {
+    examDialogData?.let {
+        Dialog(onDismissRequest = { it.close() }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column {
+                    it.exam.forEach {
+                        SimpleButton(modifier = Modifier.fillMaxWidth(), buttonVM = it)
+                    }
+                    SimpleButton(modifier = Modifier.fillMaxWidth(), ButtonVM(true, "close") { it.close() })
+                }
+            }
+        }
     }
 }
 
