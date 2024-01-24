@@ -21,8 +21,12 @@ import com.aiocare.sdk.services.readHardware
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
 import com.aiocare.sdk.services.readTemperature
+import com.aiocare.supercat.CalibrationSequenceType
 import com.aiocare.supercat.Logic
 import com.aiocare.supercat.PhoneInfo
+import com.aiocare.supercat.pefA
+import com.aiocare.supercat.pefB
+import com.aiocare.supercat.standardPef
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
@@ -164,7 +168,11 @@ class SuperCatViewModel(
                         }
                     })
                 },
-                address = listOf("192.168.1.203:8080", "192.168.1.217:8080", "192.168.1.183:8080").map { current ->
+                address = listOf(
+                    "192.168.1.203:8080",
+                    "192.168.1.217:8080",
+                    "192.168.1.183:8080"
+                ).map { current ->
                     ButtonVM(true, current, {
                         updateUiState {
                             copy(
@@ -200,20 +208,20 @@ class SuperCatViewModel(
         }
     }
 
-    private fun startObservingState(){
+    private fun startObservingState() {
         viewModelScope.launch {
-            getIConnect().getConnectedFlow().collect{
-                if(!it){
-                 actionJob?.cancelAndJoin()
+            getIConnect().getConnectedFlow().collect {
+                if (!it) {
+                    actionJob?.cancelAndJoin()
                     timerJob?.cancelAndJoin()
                     device = null
                     deviceName = ""
                     updateProgress("disconnect")
                     updateSequenceName("")
-                        startSearching()
-                        updateUiState {
-                            copy(after = "", before = EnvironmentalData(), measurementTimer = 0)
-                        }
+                    startSearching()
+                    updateUiState {
+                        copy(after = "", before = EnvironmentalData(), measurementTimer = 0)
+                    }
                 }
             }
         }
@@ -244,7 +252,24 @@ class SuperCatViewModel(
                                                             ButtonVM(
                                                                 true,
                                                                 "${it}"
-                                                            ) { v7(it) }
+                                                            ) { v7(CalibrationSequenceType.OLD_0_16, it) }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        },
+                                        ButtonVM(true, "v7(17l/s)") {
+                                            updateUiState {
+                                                copy(
+                                                    examDialogData = null,
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(
+                                                                true,
+                                                                "${it}"
+                                                            ) { v7(CalibrationSequenceType.NEW_0_17, it) }
                                                         }
                                                     ) {
                                                         updateUiState { copy(repeatDialog = null) }
@@ -255,6 +280,7 @@ class SuperCatViewModel(
                                         ButtonVM(true, "c1-c11") {
                                             updateUiState {
                                                 copy(
+                                                    examDialogData = null,
                                                     repeatDialog = RepeatDialogData(
                                                         (1..5).map {
                                                             ButtonVM(
@@ -271,10 +297,26 @@ class SuperCatViewModel(
                                         ButtonVM(true, "pef") {
                                             updateUiState {
                                                 copy(
+                                                    examDialogData = null,
                                                     repeatDialog = RepeatDialogData(
                                                         (1..5).map {
                                                             ButtonVM(true, "${it}") {
-                                                                pef(it)
+                                                                pef(standardPef, it)
+                                                            }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        }, ButtonVM(true, "pefA") {
+                                            updateUiState {
+                                                copy(
+                                                    examDialogData = null,
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(true, "${it}") {
+                                                                pef(pefA, it)
                                                             }
                                                         }
                                                     ) {
@@ -283,6 +325,22 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
+                                        ButtonVM(true, "pefB") {
+                                            updateUiState {
+                                                copy(
+                                                    examDialogData = null,
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(true, "${it}") {
+                                                                pef(pefB, it)
+                                                            }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        }
                                     )
                                 ) {
                                     updateUiState {
@@ -340,24 +398,24 @@ class SuperCatViewModel(
         }
     }
 
-    private fun pef(repeat: Int) {
+    private fun pef(list: List<String>, repeat: Int) {
         clearDialog()
         actionJob?.cancel()
         actionJob = viewModelScope.launch {
             loadEnv()
             handleWaveform(
-                Logic(uiState.url!!.value).preparePef(repeat),
+                Logic(uiState.url!!.value).preparePef(list, repeat),
                 RecordingType.ISO_PEF.name
             )
         }
     }
 
-    private fun v7(repeat: Int) {
+    private fun v7(type: CalibrationSequenceType, repeat: Int) {
         clearDialog()
         actionJob?.cancel()
         actionJob = viewModelScope.launch {
             loadEnv()
-            handleSequence(Logic(uiState.url!!.value).v7(repeat))
+            handleSequence(Logic(uiState.url!!.value).v7(type, repeat))
         }
     }
 
@@ -487,8 +545,8 @@ class SuperCatViewModel(
             waveformRawData = waveformRawData,
             type = name,
             rawDataType = rawDataType.name,
-            notes = uiState.note?.value?:""
-         )
+            notes = uiState.note?.value ?: ""
+        )
         trySendToApi(request)
     }
 
@@ -515,18 +573,18 @@ class SuperCatViewModel(
         try {
             updateSequenceName("calibrationSequence")
             startCalculatingSeconds()
-                Logic(uiState.url!!.value).apply {
-                    val zf = zeroFlow()
-                    val out = processSequence(sequence, device!!, 1) {
-                        updateProgress(it)
-                    }
-                    processSending(
-                        zf,
-                        out,
-                        null,
-                        RecordingType.CALIBRATION_SEQUENCE.name,
-                        RawDataType.STEADY_FLOW
-                    )
+            Logic(uiState.url!!.value).apply {
+                val zf = zeroFlow()
+                val out = processSequence(sequence, device!!, 1) {
+                    updateProgress(it)
+                }
+                processSending(
+                    zf,
+                    out,
+                    null,
+                    RecordingType.CALIBRATION_SEQUENCE.name,
+                    RawDataType.STEADY_FLOW
+                )
             }
         } catch (e: Exception) {
             updateProgress(e.message ?: e.toString())

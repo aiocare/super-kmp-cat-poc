@@ -17,10 +17,10 @@ class Logic(private val hostAddress: String) {
 
     private val api by lazy { HansProxyApi(hostAddress) }
 
-    private fun prepareV7(): MutableList<Units.FlowUnit.L_S> {
+    private fun prepareV7(type: CalibrationSequenceType): MutableList<Units.FlowUnit.L_S> {
         var current = Units.FlowUnit.L_S(0.1)
         val list = mutableListOf<Units.FlowUnit.L_S>()
-        while (current < Units.FlowUnit.L_S(16.0)) {
+        while (current < type.maxFlow) {
             list.add(current)
             val step = when (current.value) {
                 in 0.0..0.99 -> 0.1
@@ -31,24 +31,8 @@ class Logic(private val hostAddress: String) {
         return list
     }
 
-    fun preparePef(repeat: Int): List<CalibrationActions> {
-        return listOf(
-            "Aat1-7Pk",
-            "Aat2-5Pk",
-            "Aat3-3Pk",
-            "Aat5-0Pk",
-            "Aat7-5Pk",
-            "Aat10-0Pk",
-            "Aat12-0Pk",
-            "Aat14-5Pk",
-            "Aat17-0Pk",
-            "Bat3-3Pk",
-            "Bat7-5Pk",
-            "Bat12-0Pk",
-            "Bat10-0Pk",
-            "Bat14-5Pk",
-            "Bat17-0Pk"
-        ).times(repeat).map {
+    fun preparePef(list: List<String>, repeat: Int): List<CalibrationActions> {
+        return list.times(repeat).map {
             CalibrationActions(
                 name = it,
                 flow = Units.FlowUnit.L_S(0.0),
@@ -74,10 +58,10 @@ class Logic(private val hostAddress: String) {
         val inhaleAction: suspend () -> Unit
     )
 
-    fun v7(repeat: Int): List<CalibrationActions> =
-        prepareV7().transformToCalibrationActions().times(repeat)
+    fun v7(type: CalibrationSequenceType, repeat: Int): List<CalibrationActions> =
+        prepareV7(type).transformToCalibrationActions().times(repeat)
 
-    fun List<Units.FlowUnit.L_S>.transformToCalibrationActions(): List<CalibrationActions> =
+    private fun List<Units.FlowUnit.L_S>.transformToCalibrationActions(): List<CalibrationActions> =
         this.map { prepareCalibrationActions(it) }
 
     suspend fun processWaveform(
@@ -218,6 +202,7 @@ class Logic(private val hostAddress: String) {
         val volumeValue = when (flow.value) {
             in 0.0..1.0 -> Units.VolumeUnit.LITER(flow.value * 2)
             in 1.0..1.99 -> Units.VolumeUnit.LITER(flow.value)
+            in 16.0..18.0 -> Units.VolumeUnit.LITER(8.0)
             else -> Units.VolumeUnit.LITER(flow.value / 2)
         }
         return CalibrationActions(
