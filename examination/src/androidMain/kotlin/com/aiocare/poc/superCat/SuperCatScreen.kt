@@ -126,7 +126,8 @@ fun ExamDialog(examDialogData: ExamDialogData?) {
                     .padding(4.dp),
                 shape = RoundedCornerShape(16.dp),
             ) {
-                Column {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
                     it.exam.forEach {
                         SimpleButton(modifier = Modifier.fillMaxWidth(), buttonVM = it)
                     }

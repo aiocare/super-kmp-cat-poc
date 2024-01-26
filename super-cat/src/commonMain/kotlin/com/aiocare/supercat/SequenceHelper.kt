@@ -56,6 +56,23 @@ val pefB by lazy {
     )
 }
 
-enum class CalibrationSequenceType(val maxFlow: Units.FlowUnit.L_S){
+val pefBAdj by lazy {
+    listOf(
+        "Bat1-7Pk_adjusted",
+        "Bat2-5Pk_adjusted",
+        "Bat3-0Pk_adjusted",
+        "Bat3-3Pk_adjusted",
+        "Bat5-0Pk_adjusted",
+        "Bat6-0Pk_adjusted",
+        "Bat7-5Pk_adjusted",
+        "Bat9-0Pk_adjusted",
+        "Bat10-0Pk_adjusted",
+        "Bat12-0Pk_adjusted",
+        "Bat14-5Pk_adjusted",
+        "Bat17-0Pk_adjusted"
+    )
+}
+
+enum class CalibrationSequenceType(val maxFlow: Units.FlowUnit.L_S) {
     OLD_0_16(Units.FlowUnit.L_S(16.0)), NEW_0_17(Units.FlowUnit.L_S(17.0))
 }

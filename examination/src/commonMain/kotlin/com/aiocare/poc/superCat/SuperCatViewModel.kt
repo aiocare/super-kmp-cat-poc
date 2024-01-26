@@ -26,6 +26,7 @@ import com.aiocare.supercat.Logic
 import com.aiocare.supercat.PhoneInfo
 import com.aiocare.supercat.pefA
 import com.aiocare.supercat.pefB
+import com.aiocare.supercat.pefBAdj
 import com.aiocare.supercat.standardPef
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
@@ -333,6 +334,22 @@ class SuperCatViewModel(
                                                         (1..5).map {
                                                             ButtonVM(true, "${it}") {
                                                                 pef(pefB, it)
+                                                            }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        },
+                                        ButtonVM(true, "pefB adj") {
+                                            updateUiState {
+                                                copy(
+                                                    examDialogData = null,
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(true, "${it}") {
+                                                                pef(pefBAdj, it)
                                                             }
                                                         }
                                                     ) {
