@@ -58,18 +58,18 @@ val pefB by lazy {
 
 val pefBAdj by lazy {
     listOf(
-        "Bat1-7Pk_adjusted",
-        "Bat2-5Pk_adjusted",
-        "Bat3-0Pk_adjusted",
-        "Bat3-3Pk_adjusted",
-        "Bat5-0Pk_adjusted",
-        "Bat6-0Pk_adjusted",
-        "Bat7-5Pk_adjusted",
-        "Bat9-0Pk_adjusted",
-        "Bat10-0Pk_adjusted",
-        "Bat12-0Pk_adjusted",
-        "Bat14-5Pk_adjusted",
-        "Bat17-0Pk_adjusted"
+        "Bat1-7Pk-adjusted",
+        "Bat2-5Pk-adjusted",
+        "Bat3-0Pk-adjusted",
+        "Bat3-3Pk-adjusted",
+        "Bat5-0Pk-adjusted",
+        "Bat6-0Pk-adjusted",
+        "Bat7-5Pk-adjusted",
+        "Bat9-0Pk-adjusted",
+        "Bat10-0Pk-adjusted",
+        "Bat12-0Pk-adjusted",
+        "Bat14-5Pk-adjusted",
+        "Bat17-0Pk-adjusted"
     )
 }
 

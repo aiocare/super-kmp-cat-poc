@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.aiocare.supercat"
-version = "2.0.8"
+version = "2.0.10"
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {

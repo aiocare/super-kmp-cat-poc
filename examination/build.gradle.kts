@@ -33,7 +33,7 @@ kotlin {
     cocoapods {
         summary = "Some description for the Shared Module"
         homepage = "Link to the Shared Module homepage"
-        version = "2.0.8"
+        version = "2.0.10"
         ios.deploymentTarget = "14.1"
         framework {
             baseName = "examination"
