@@ -8,5 +8,4 @@ plugins {
     id("org.jetbrains.dokka") version "1.8.20"
     id("com.google.gms.google-services") version "4.4.0" apply false
     id("com.google.firebase.crashlytics") version "2.9.9" apply false
-
 }

@@ -64,8 +64,11 @@ data class SuperCatUiState(
     val repeatDialog: RepeatDialogData? = null,
     val repeatSendingDialog: DialogData? = null,
     val initDataDialog: InitDialogData? = null,
+    val zeroFlowDialog: ZeroFlowDialogData? = null,
     val showInitAgain: ButtonVM = ButtonVM(true, "init dialog") {}
 )
+
+data class ZeroFlowDialogData(val message: String?, val close: () -> Unit)
 
 data class RepeatDialogData(
     val repeatCounter: List<ButtonVM> = listOf(),
@@ -253,7 +256,12 @@ class SuperCatViewModel(
                                                             ButtonVM(
                                                                 true,
                                                                 "${it}"
-                                                            ) { v7(CalibrationSequenceType.OLD_0_16, it) }
+                                                            ) {
+                                                                v7(
+                                                                    CalibrationSequenceType.OLD_0_16,
+                                                                    it
+                                                                )
+                                                            }
                                                         }
                                                     ) {
                                                         updateUiState { copy(repeatDialog = null) }
@@ -270,7 +278,12 @@ class SuperCatViewModel(
                                                             ButtonVM(
                                                                 true,
                                                                 "${it}"
-                                                            ) { v7(CalibrationSequenceType.NEW_0_17, it) }
+                                                            ) {
+                                                                v7(
+                                                                    CalibrationSequenceType.NEW_0_17,
+                                                                    it
+                                                                )
+                                                            }
                                                         }
                                                     ) {
                                                         updateUiState { copy(repeatDialog = null) }
@@ -466,7 +479,19 @@ class SuperCatViewModel(
                 processSending(zf, null, out, name, RawDataType.WAVEFORM)
             }
         } catch (e: Exception) {
-            updateProgress(e.message ?: e.toString())
+            if (e is SequenceException.ZeroFlowException) {
+                timerJob?.cancelAndJoin()
+                updateUiState {
+                    copy(
+                        playMusicFail = true,
+                        zeroFlowDialog = ZeroFlowDialogData(e.message) {
+                            updateUiState { copy(zeroFlowDialog = null) }
+                        },
+                        measurementTimer = 0
+                    )
+                }
+            } else
+                updateProgress(e.message ?: e.toString())
         }
     }
 
@@ -488,6 +513,7 @@ class SuperCatViewModel(
             val userJob: Deferred<Unit> = async { delay(5000) }
             userJob.await()
             job.cancelAndJoin()
+            ErrorChecker.checkZeroFlowAndThrow(out)
             return@coroutineScope out
         }
     }
@@ -604,7 +630,19 @@ class SuperCatViewModel(
                 )
             }
         } catch (e: Exception) {
-            updateProgress(e.message ?: e.toString())
+            if (e is SequenceException.ZeroFlowException) {
+                timerJob?.cancelAndJoin()
+                updateUiState {
+                    copy(
+                        playMusicFail = true,
+                        zeroFlowDialog = ZeroFlowDialogData(e.message) {
+                            updateUiState { copy(zeroFlowDialog = null) }
+                        },
+                        measurementTimer = 0
+                    )
+                }
+            } else
+                updateProgress(e.message ?: e.toString())
         }
 
     }
@@ -620,8 +658,6 @@ class SuperCatViewModel(
 
         while (temperature == null || pressure == null || humidity == null || batt == null) {
             try {
-                println("___________________________")
-                println(device?.readHardware())
                 withTimeout(5000) {
                     delay(400)
                     updateProgress("collecting after..... temperature")

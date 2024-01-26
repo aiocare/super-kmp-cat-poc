@@ -35,7 +35,7 @@ val pefA by lazy {
         "Aat10-0Pk",
         "Aat12-0Pk",
         "Aat14-5Pk",
-        "Aat17-0Pk",
+        "Aat17-0Pk"
     )
 }
 
@@ -52,7 +52,7 @@ val pefB by lazy {
         "Bat10-0Pk",
         "Bat12-0Pk",
         "Bat14-5Pk",
-        "Bat17-0Pk",
+        "Bat17-0Pk"
     )
 }
 

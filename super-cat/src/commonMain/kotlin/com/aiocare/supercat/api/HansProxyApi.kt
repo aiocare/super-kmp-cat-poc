@@ -8,7 +8,6 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
-import kotlinx.coroutines.delay
 
 class HansProxyApi(private val hostAddress: String) {
 
