@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.aiocare.Screens
 import com.aiocare.cat.Cat
+import com.aiocare.custom.CustomScreen
 import com.aiocare.mvvm.createDefaultConfig
 import com.aiocare.poc.calibration.CalibrationScreen
 import com.aiocare.poc.calibration.CalibrationViewModel
@@ -17,12 +18,13 @@ import com.aiocare.poc.searchDevice.SearchDeviceScreen
 import com.aiocare.poc.searchDevice.SearchDeviceViewModel
 import com.aiocare.poc.superCat.SuperCatScreen
 import com.aiocare.poc.superCat.SuperCatViewModel
+import com.aiocare.poc.superCat.custom.CustomViewModel
 
 @Composable
 fun NavGraph (navController: NavHostController){
     NavHost(
         navController = navController,
-        startDestination = Screens.Intro.route
+        startDestination = Screens.Custom.route
     )
     {
         composable(route = Screens.Cat.route) {
@@ -31,6 +33,12 @@ fun NavGraph (navController: NavHostController){
         composable(route = Screens.Intro.route) {
             IntroScreen(
                 viewModel = IntroViewModel(createDefaultConfig()),
+                navController = navController
+            )
+        }
+        composable(route = Screens.Custom.route) {
+            CustomScreen(
+                viewModel = CustomViewModel(createDefaultConfig()),
                 navController = navController
             )
         }

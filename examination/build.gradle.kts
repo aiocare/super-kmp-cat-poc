@@ -55,8 +55,6 @@ kotlin {
                 implementation("com.patrykandpatrick.vico:compose:1.8.0")
                 implementation(kotlin("reflect"))
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
-
-
                 implementation("io.ktor:ktor-client-core:2.3.5")
                 implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
