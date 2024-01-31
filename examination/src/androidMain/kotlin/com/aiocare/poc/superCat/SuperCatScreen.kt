@@ -49,17 +49,17 @@ fun SuperCatScreen(viewModel: SuperCatViewModel) {
     val mediaPlayerSuccess = remember { MediaPlayer.create(context, R.raw.success_bell) }
     val mediaPlayerFail = remember { MediaPlayer.create(context, R.raw.error_bell) }
 
+    if (viewModel.uiState.playMusicSuccess && !mediaPlayerSuccess.isPlaying) {
+        mediaPlayerSuccess.start()
+        viewModel.playingStarted()
+    }
+    if (viewModel.uiState.playMusicFail && !mediaPlayerFail.isPlaying) {
+        mediaPlayerFail.start()
+        viewModel.playingStarted()
+    }
+
+
     Column {
-
-        if (viewModel.uiState.playMusicSuccess && !mediaPlayerSuccess.isPlaying) {
-            mediaPlayerSuccess.start()
-            viewModel.playingStarted()
-        }
-        if (viewModel.uiState.playMusicFail && !mediaPlayerFail.isPlaying) {
-            mediaPlayerFail.start()
-            viewModel.playingStarted()
-        }
-
         if (viewModel.uiState.devices.isNotEmpty())
             Column(
                 modifier = Modifier

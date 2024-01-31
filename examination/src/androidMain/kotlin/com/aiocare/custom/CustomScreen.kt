@@ -1,28 +1,32 @@
 package com.aiocare.custom
 
-import android.util.Log
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.aiocare.KeepScreenOn
+import com.aiocare.SimpleButton
+import com.aiocare.poc.superCat.custom.CustomData
 import com.aiocare.poc.superCat.custom.CustomViewModel
-import com.aiocare.poc.superCat.custom.Dir
-import com.aiocare.poc.superCat.custom.WaveFormFile
+import com.aiocare.supercat.api.Dir
+import com.aiocare.util.ButtonVM
 import com.google.gson.Gson
 
 @Composable
@@ -30,11 +34,76 @@ fun CustomScreen(
     viewModel: CustomViewModel,
     navController: NavController
 ) {
-    DirView(modifier = Modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState()),
-        dir = getDataFromJson(), path = ""){
-        Log.d("XDDD", "${it}")
+    BackHandler {}
+
+    KeepScreenOn()
+
+    LaunchedEffect(key1 = "", block = { viewModel.initViewModel() })
+
+    Column {
+        if (viewModel.uiState.devices.isNotEmpty())
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                viewModel.uiState.devices.forEach {
+                    SimpleButton(
+                        buttonVM = ButtonVM(
+                            visible = true,
+                            onClickAction = it.onDeviceClicked,
+                            text = it.text
+                        )
+                    )
+                }
+            }
+
+        listOfNotNull(
+            viewModel.uiState.url,
+            viewModel.uiState.hansSerial,
+            viewModel.uiState.note,
+        )
+            .forEach { data ->
+                TextField(
+                    label = { Text(data.description) },
+                    modifier = Modifier.fillMaxWidth(),
+                    value = data.value,
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = if (data.numberKeyboardType) KeyboardType.Number else KeyboardType.Text),
+                    onValueChange = { data.onValueChanged.invoke(it) })
+            }
+        SimpleButton(buttonVM = viewModel.uiState.disconnectBtn)
+        CustomDataView(viewModel.uiState.customData)
+    }
+    viewModel.uiState.selectData?.let { selectedData ->
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())){
+            DirView(dir = selectedData.dir, path = "", onClicked = {selectedData.onSelected(it)})
+        }
+    }
+    if (viewModel.uiState.loading) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun CustomDataView(customData: CustomData?) {
+    customData?.let {
+        Column {
+            sequenceOf(
+                customData.selectBtn,
+                customData.resetBtn,
+                customData.executeBtn,
+                customData.executeWithoutRecordingBtn
+            ).forEach {
+                SimpleButton(buttonVM = it)
+            }
+            Text(text = customData.selectedWaveForm)
+            Text(text = customData.temperatureAndHumidity)
+            Text(text = customData.info)
+        }
     }
 }
 

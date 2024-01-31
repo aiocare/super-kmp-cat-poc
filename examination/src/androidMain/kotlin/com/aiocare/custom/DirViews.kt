@@ -1,5 +1,6 @@
 package com.aiocare.custom
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -15,8 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.aiocare.poc.superCat.custom.Dir
-import com.aiocare.poc.superCat.custom.WaveFormFile
+import com.aiocare.supercat.api.Dir
+import com.aiocare.supercat.api.WaveFormFile
 
 @Composable
 fun FileView(waveFormFile: WaveFormFile, path: String= "", onClicked: (String) -> Unit) {
