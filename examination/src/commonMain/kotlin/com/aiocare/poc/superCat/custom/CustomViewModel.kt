@@ -22,6 +22,7 @@ import com.aiocare.sdk.services.readTemperature
 import com.aiocare.supercat.api.Dir
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
+import com.aiocare.supercat.api.Response
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -31,8 +32,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlinx.datetime.Clock
-import kotlin.math.floor
 
 data class CustomUiState(
     val devices: List<DeviceItem> = listOf(),
@@ -213,10 +212,16 @@ class CustomViewModel(
     }
 
     private fun executeSequence(sequence: String?) {
-        viewModelScope.launch {
-            checkEnvironmentalData()
-            checkZeroFlow()
-            processSequence(sequence)
+        try {
+            sequence?.let {
+                viewModelScope.launch {
+                    checkEnvironmentalData()
+                    checkZeroFlow()
+                    processSequence(sequence)
+                }
+            }
+        } catch (e: Exception) {
+            updateProgress("executing sequence, error=${e.message}")
         }
     }
 
@@ -290,9 +295,36 @@ class CustomViewModel(
 
     }
 
-    private suspend fun processSequence(sequence: String?) {
-        updateProgress(sequence ?: "")
+    data class SequenceResultData(
+        val humidity: Response,
+        val temperature: Response,
+        val waveFormRawSignal: List<Int>
+    )
 
+    private suspend fun processSequence(sequence: String): SequenceResultData {
+        updateProgress(sequence ?: "")
+        val api = HansProxyApi(uiState.url?.value ?: "")
+        api.waveform(HansCommand.waveform(sequence))
+        api.command(HansCommand.reset())
+
+        val recordedRawSignal = mutableListOf<Int>()
+        var recordJob: Job?
+        val temperature = api.command(HansCommand.rawCommand("SendData Temperature"))
+        updateProgress("temperature = ${(temperature as Response.TEXT).response}")
+        val humidity = api.command(HansCommand.rawCommand("SendData RH"))
+        updateProgress("humidity = ${(humidity as Response.TEXT).response}")
+        coroutineScope {
+            recordJob = launch {
+                device?.readFlow()?.collect {
+                    it.forEach {
+                        recordedRawSignal.add(it)
+                    }
+                }
+            }
+        }
+        val runResponse = api.command(HansCommand.rawCommand("Run"))
+        recordJob?.cancelAndJoin()
+        return SequenceResultData(humidity, temperature, recordedRawSignal)
     }
 
     private fun setupCustomData() {
