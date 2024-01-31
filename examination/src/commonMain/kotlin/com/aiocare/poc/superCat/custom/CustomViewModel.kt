@@ -1,10 +1,13 @@
 package com.aiocare.poc.superCat.custom
 
+import com.aiocare.model.Units
+import com.aiocare.model.WaveformData
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
 import com.aiocare.poc.calibration.EnvironmentalData
 import com.aiocare.poc.searchDevice.DeviceItem
+import com.aiocare.poc.superCat.ErrorChecker
 import com.aiocare.poc.superCat.InitDialogData
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.sdk.IAioCareDevice
@@ -12,13 +15,24 @@ import com.aiocare.sdk.IAioCareScan
 import com.aiocare.sdk.connecting.getIConnect
 import com.aiocare.sdk.connecting.getIConnectMobile
 import com.aiocare.sdk.scan.getIScan
+import com.aiocare.sdk.services.readFlow
+import com.aiocare.sdk.services.readHumidity
+import com.aiocare.sdk.services.readPressure
+import com.aiocare.sdk.services.readTemperature
 import com.aiocare.supercat.api.Dir
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.util.ButtonVM
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import kotlinx.datetime.Clock
+import kotlin.math.floor
 
 data class CustomUiState(
     val devices: List<DeviceItem> = listOf(),
@@ -26,7 +40,6 @@ data class CustomUiState(
     val note: InputData? = null,
     val hansSerial: InputData? = null,
     val disconnectBtn: ButtonVM = ButtonVM(visible = false, text = "disconnect"),
-    val before: EnvironmentalData = EnvironmentalData(),
     val initDataDialog: InitDialogData? = null,
     val showInitAgain: ButtonVM = ButtonVM(true, "init dialog") {},
     val customData: CustomData? = null,
@@ -40,10 +53,14 @@ data class CustomData(
     val selectBtn: ButtonVM,
     val resetBtn: ButtonVM,
     val executeBtn: ButtonVM,
+    val sendBtn: ButtonVM,
     val executeWithoutRecordingBtn: ButtonVM,
     val temperatureAndHumidity: String = "",
     val selectedWaveForm: String = "",
-    val info: String = ""
+    val info: String = "",
+    val results: List<WaveformData> = listOf(),
+    val zeroFlow: List<Int>? = null,
+    val before: EnvironmentalData? = null
 )
 
 class CustomViewModel(
@@ -169,7 +186,6 @@ class CustomViewModel(
                         copy(
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                             customData = null,
-                            before = EnvironmentalData()
                         )
                     }
                 }
@@ -196,6 +212,89 @@ class CustomViewModel(
         }
     }
 
+    private fun executeSequence(sequence: String?) {
+        viewModelScope.launch {
+            checkEnvironmentalData()
+            checkZeroFlow()
+            processSequence(sequence)
+        }
+    }
+
+    private suspend fun checkEnvironmentalData() {
+        if (uiState.customData?.before == null) {
+            val loadedEnv = loadEnv()
+            updateUiState {
+                copy(customData = uiState.customData?.copy(before = loadedEnv))
+            }
+        }
+    }
+
+    private suspend fun loadEnv(): EnvironmentalData {
+        var temperature: Float? = null
+        var pressure: Float? = null
+        var humidity: Float? = null
+        while (temperature == null || pressure == null || humidity == null) {
+            try {
+                withTimeout(5000) {
+                    delay(400)
+                    if (temperature == null) {
+                        temperature = device?.readTemperature()
+                        updateProgress("temperature=$temperature")
+                    }
+                    if (pressure == null) {
+                        pressure = device?.readPressure()
+                        updateProgress("pressure=$pressure")
+                    }
+                    if (humidity == null) {
+                        humidity = device?.readHumidity()
+                        updateProgress("humidity=$humidity")
+                    }
+                }
+            } catch (e: Exception) {
+                updateProgress("try again loading env...")
+            }
+        }
+        temperature?.let { temperature ->
+            pressure?.let { pressure ->
+                humidity?.let { humidity ->
+                    return EnvironmentalData(
+                        temperature, pressure, humidity
+                    )
+                }
+            }
+        }
+        throw Exception("Unexpected Exception during getting Env")
+    }
+
+
+    private suspend fun checkZeroFlow() {
+        if (uiState.customData?.zeroFlow == null) {
+            updateProgress("zeroFlow....")
+            val out = mutableListOf<Int>()
+            val result = coroutineScope {
+                val job = launch {
+                    device!!.readFlow().collect {
+                        it.forEach {
+                            out.add(it)
+                        }
+                    }
+                }
+                val userJob: Deferred<Unit> = async { delay(5000) }
+                userJob.await()
+                job.cancelAndJoin()
+                ErrorChecker.checkZeroFlowAndThrow(out)
+                return@coroutineScope out
+            }
+            updateUiState { copy(customData = uiState.customData?.copy(zeroFlow = result)) }
+        }
+
+    }
+
+    private suspend fun processSequence(sequence: String?) {
+        updateProgress(sequence ?: "")
+
+    }
+
     private fun setupCustomData() {
         updateUiState {
             copy(
@@ -203,37 +302,46 @@ class CustomViewModel(
                     selectBtn = ButtonVM(true, "select") {
                         selectSequence()
                     },
-                    executeBtn = ButtonVM(true, "execute"){
-
+                    executeBtn = ButtonVM(true, "execute") {
+                        executeSequence(uiState.customData?.selectedWaveForm)
                     },
-                    executeWithoutRecordingBtn = ButtonVM(true, "execute without recording"){
+                    executeWithoutRecordingBtn = ButtonVM(true, "execute without recording") {
                         viewModelScope.launch {
                             try {
                                 updateProgress("start execute without recording")
-                                HansProxyApi(uiState.url?.value ?: "").waveform(HansCommand.waveform(uiState.customData?.selectedWaveForm?:""))
+                                HansProxyApi(
+                                    uiState.url?.value ?: ""
+                                ).waveform(
+                                    HansCommand.waveform(
+                                        uiState.customData?.selectedWaveForm ?: ""
+                                    )
+                                )
                                 updateProgress("finish execute without recording")
-                            }catch (e: Exception){
+                            } catch (e: Exception) {
                                 updateProgress("error execute without recording = ${e.message}")
                             }
                         }
                     },
-                    resetBtn = ButtonVM(true, "reset"){
+                    resetBtn = ButtonVM(true, "reset") {
                         viewModelScope.launch {
                             try {
                                 updateProgress("reseting...")
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
                                 updateProgress("reseting finished")
-                            }catch (e: Exception){
+                            } catch (e: Exception) {
                                 updateProgress("error reseting = ${e.message}")
                             }
                         }
+                    },
+                    sendBtn = ButtonVM(true, "send") {
+
                     }
                 ),
             )
         }
     }
 
-    private fun updateProgress(action: String){
+    private fun updateProgress(action: String) {
         updateUiState {
             copy(customData = customData?.copy(info = action))
         }
@@ -244,16 +352,18 @@ class CustomViewModel(
             val sequences = HansProxyApi(uiState.url?.value ?: "").getAvailableSequences()
             updateUiState {
                 copy(
-                    selectData = SelectData(sequences, {result ->
-                        updateUiState { copy(selectData = null,
-                            customData = uiState.customData?.copy(selectedWaveForm = result)
-                            ) }
+                    selectData = SelectData(sequences, { result ->
+                        updateUiState {
+                            copy(
+                                selectData = null,
+                                customData = uiState.customData?.copy(selectedWaveForm = result)
+                            )
+                        }
                     })
                 )
             }
         }
     }
-
 
     private fun disconnect() {
         loading(true)
@@ -266,14 +376,13 @@ class CustomViewModel(
             updateUiState {
                 copy(
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                    customData = null,
-                    before = EnvironmentalData(),
-                    )
+                    customData = null
+                )
             }
         }
     }
 
-    private fun loading(state: Boolean){
+    private fun loading(state: Boolean) {
         updateUiState { copy(loading = state) }
     }
 }
