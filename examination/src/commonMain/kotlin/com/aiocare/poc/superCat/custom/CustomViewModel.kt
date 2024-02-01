@@ -1,16 +1,18 @@
 package com.aiocare.poc.superCat.custom
 
-import com.aiocare.cortex.cat.hans.Command
-import com.aiocare.model.Units
 import com.aiocare.model.WaveformData
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
+import com.aiocare.poc.VersionHolder
 import com.aiocare.poc.calibration.EnvironmentalData
+import com.aiocare.poc.ktor.Api
 import com.aiocare.poc.searchDevice.DeviceItem
-import com.aiocare.poc.superCat.ErrorChecker
+import com.aiocare.poc.superCat.DialogData
 import com.aiocare.poc.superCat.InitDialogData
 import com.aiocare.poc.superCat.InputData
+import com.aiocare.poc.superCat.RawDataType
+import com.aiocare.poc.superCat.RecordingType
 import com.aiocare.sdk.IAioCareDevice
 import com.aiocare.sdk.IAioCareScan
 import com.aiocare.sdk.connecting.getIConnect
@@ -20,12 +22,14 @@ import com.aiocare.sdk.services.readFlow
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
 import com.aiocare.sdk.services.readTemperature
+import com.aiocare.supercat.PhoneInfo
 import com.aiocare.supercat.api.Dir
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.supercat.api.Response
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -33,6 +37,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.datetime.Clock
 
 data class CustomUiState(
     val devices: List<DeviceItem> = listOf(),
@@ -45,7 +50,9 @@ data class CustomUiState(
     val customData: CustomData? = null,
     val selectData: SelectData? = null,
     val loading: Boolean = false,
-)
+    val repeatSendingDialog: DialogData? = null,
+    val initDialogBtn: ButtonVM = ButtonVM(true, "init"){}
+    )
 
 data class SelectData(val dir: Dir, val onSelected: (String) -> Unit)
 
@@ -58,9 +65,10 @@ data class CustomData(
     val temperatureAndHumidity: String = "",
     val selectedWaveForm: String = "",
     val info: String = "",
-    val results: List<WaveformData> = listOf(),
+    val results: MutableList<CustomViewModel.SequenceResultData> = mutableListOf(),
     val zeroFlow: List<Int>? = null,
-    val before: EnvironmentalData? = null
+    val before: EnvironmentalData? = null,
+    val beforeTime: Long? = null
 )
 
 class CustomViewModel(
@@ -110,6 +118,11 @@ class CustomViewModel(
                     onValueChanged = { v -> updateUiState { copy(hansSerial = hansSerial?.copy(value = v)) } },
                     numberKeyboardType = true
                 ),
+                initDialogBtn = uiState.initDialogBtn.copy(onClickAction = {
+                    updateUiState {
+                        copy(initDataDialog = uiState.initDataDialog?.copy(visible = true))
+                    }
+                }),
                 showInitAgain = uiState.showInitAgain.copy(onClickAction = {
                     updateUiState {
                         copy(
@@ -218,7 +231,7 @@ class CustomViewModel(
                 viewModelScope.launch {
                     checkEnvironmentalData()
                     checkZeroFlow()
-                    processSequence(sequence)
+                    uiState.customData?.results?.add(processSequence(sequence))
                 }
             }
         } catch (e: Exception) {
@@ -230,7 +243,12 @@ class CustomViewModel(
         if (uiState.customData?.before == null) {
             val loadedEnv = loadEnv()
             updateUiState {
-                copy(customData = uiState.customData?.copy(before = loadedEnv))
+                copy(
+                    customData = uiState.customData?.copy(
+                        before = loadedEnv,
+                        beforeTime = Clock.System.now().toEpochMilliseconds()
+                    )
+                )
             }
         }
     }
@@ -288,7 +306,7 @@ class CustomViewModel(
                 val userJob: Deferred<Unit> = async { delay(5000) }
                 userJob.await()
                 job.cancelAndJoin()
-                ErrorChecker.checkZeroFlowAndThrow(out)
+//                ErrorChecker.checkZeroFlowAndThrow(out)
                 return@coroutineScope out
             }
             updateUiState { copy(customData = uiState.customData?.copy(zeroFlow = result)) }
@@ -297,15 +315,18 @@ class CustomViewModel(
     }
 
     data class SequenceResultData(
+        val name: String,
+        val sendSpirometryResult: String,
         val humidity: Response,
         val temperature: Response,
-        val waveFormRawSignal: List<Int>
+        val waveFormRawSignal: List<Int>,
+        val timestamp: Long,
     )
 
     private suspend fun processSequence(sequence: String): SequenceResultData {
         updateProgress(sequence ?: "")
         val api = HansProxyApi(uiState.url?.value ?: "")
-        api.waveformLoadRun(HansCommand.waveform(sequence))
+        api.waveformLoad(HansCommand.waveform(sequence))
         api.command(HansCommand.reset())
 
         val recordedRawSignal = mutableListOf<Int>()
@@ -314,18 +335,31 @@ class CustomViewModel(
         updateProgress("temperature = ${(temperature as Response.TEXT).response}")
         val humidity = api.command(HansCommand.rawCommand("SendData RH"))
         updateProgress("humidity = ${(humidity as Response.TEXT).response}")
-        coroutineScope {
+        return coroutineScope {
             recordJob = launch {
                 device?.readFlow()?.collect {
                     it.forEach {
+                        println("Xdddd ${it}")
                         recordedRawSignal.add(it)
                     }
                 }
             }
+            api.command(HansCommand.rawCommand("Run"))
+            recordJob?.cancelAndJoin()
+            val sendSpirometryResult =
+                when (val res = api.command(HansCommand.waveformData())) {
+                    is Response.TEXT -> res.response
+                    else -> "bad response"
+                }
+            return@coroutineScope SequenceResultData(
+                sequence,
+                sendSpirometryResult,
+                humidity,
+                temperature,
+                recordedRawSignal,
+                Clock.System.now().toEpochMilliseconds()
+            )
         }
-        val runResponse = api.command(HansCommand.rawCommand("Run"))
-        recordJob?.cancelAndJoin()
-        return SequenceResultData(humidity, temperature, recordedRawSignal)
     }
 
     private fun setupCustomData() {
@@ -344,11 +378,13 @@ class CustomViewModel(
                                 updateProgress("start execute without recording")
                                 HansProxyApi(
                                     uiState.url?.value ?: ""
-                                ).customWaveform(
+                                ).waveformLoad(
                                     HansCommand.waveform(
                                         uiState.customData?.selectedWaveForm ?: ""
                                     )
                                 )
+                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
+                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.run())
                                 updateProgress("finish execute without recording")
                             } catch (e: Exception) {
                                 updateProgress("error execute without recording = ${e.message}")
@@ -367,12 +403,78 @@ class CustomViewModel(
                         }
                     },
                     sendBtn = ButtonVM(true, "send") {
-
+                        viewModelScope.launch {
+                            afterSendData()
+                        }
                     }
                 ),
             )
         }
     }
+
+    private fun calculateDate(): String {
+        return Clock.System.now().toString()
+    }
+
+    private suspend fun afterSendData() {
+        val after = loadEnv()
+        updateProgress("env collected")
+        val request = Api.PostData(
+            environment = Api.Environment(
+                recordingDevice = PhoneInfo().getPhoneModel(),
+                hansIpAddress = uiState.url?.value ?: "hans",
+                hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
+                hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
+                appVersion = VersionHolder.version,
+                spirometerDeviceSerial = deviceName,
+                operator = operator,
+                date = calculateDate()
+            ),
+            environmentalParamBefore = Api.Env(
+                temperature = uiState.customData!!.before!!.temperature!!,
+                pressure = uiState.customData!!.before!!.pressure!!,
+                humidity = uiState.customData!!.before!!.humidity!!,
+                timestamp = uiState.customData!!.beforeTime!!
+            ),
+            environmentalParamAfter = Api.Env(
+                temperature = after.temperature!!,
+                pressure = after.pressure!!,
+                humidity = after.humidity!!,
+                timestamp = Clock.System.now().toEpochMilliseconds()
+            ),
+            zeroFlowData = uiState.customData!!.zeroFlow!!,
+            steadyFlowRawData = null,
+            waveformRawData = uiState.customData!!.results.map {
+                WaveformData(
+                    it.name,
+                    it.waveFormRawSignal,
+                    "${it.sendSpirometryResult}\n${(it.humidity as Response.TEXT).response}\n${(it.temperature as Response.TEXT).response}",
+                    it.timestamp
+                )
+            },
+            type = RecordingType.ISO_PEF.name,
+            rawDataType = RawDataType.WAVEFORM.name,
+            notes = uiState.note?.value ?: ""
+        )
+        trySendToApi(request)
+    }
+    private suspend fun trySendToApi(request: Api.PostData) {
+        try {
+            val response = Api().postNewRawData(request)
+            updateProgress(response)
+        } catch (e: Exception) {
+            updateUiState {
+                copy(
+                    repeatSendingDialog = DialogData({
+                        GlobalScope.launch { trySendToApi(request) }
+                    }, {
+                        updateUiState { copy(repeatSendingDialog = null) }
+                    })
+                )
+            }
+        }
+    }
+
 
     private fun updateProgress(action: String) {
         updateUiState {
@@ -389,7 +491,11 @@ class CustomViewModel(
                         updateUiState {
                             copy(
                                 selectData = null,
-                                customData = uiState.customData?.copy(selectedWaveForm = result.removePrefix("/"))
+                                customData = uiState.customData?.copy(
+                                    selectedWaveForm = result.removePrefix(
+                                        "/waveforms/"
+                                    )
+                                )
                             )
                         }
                     })
