@@ -67,6 +67,28 @@ class HansProxyApi(private val hostAddress: String) {
         }
     }
 
+    suspend fun waveformLoad(hansCommand: HansCommand): Response {
+        val responseText =
+            httpClient.get("$hostAddress/waveform/load/${hansCommand.command}").bodyAsText()
+                .removeSuffix("\r")
+        return when (responseText) {
+            Response.NoInteractive.OK.key -> Response.NoInteractive.OK
+            Response.NoInteractive.NOT_RECOGNIZED.key -> Response.NoInteractive.NOT_RECOGNIZED
+            else -> Response.TEXT(responseText)
+        }
+    }
+
+    suspend fun customWaveform(hansCommand: HansCommand): Response {
+        val responseText =
+            httpClient.get("$hostAddress/waveform/custom/${hansCommand.command}").bodyAsText()
+                .removeSuffix("\r")
+        return when (responseText) {
+            Response.NoInteractive.OK.key -> Response.NoInteractive.OK
+            Response.NoInteractive.NOT_RECOGNIZED.key -> Response.NoInteractive.NOT_RECOGNIZED
+            else -> Response.TEXT(responseText)
+        }
+    }
+
     suspend fun getAvailableSequences(): Dir {
         val jsonSerializer = Json {
             ignoreUnknownKeys = true

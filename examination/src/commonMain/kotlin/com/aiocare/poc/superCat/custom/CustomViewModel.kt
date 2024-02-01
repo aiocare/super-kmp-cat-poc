@@ -1,5 +1,6 @@
 package com.aiocare.poc.superCat.custom
 
+import com.aiocare.cortex.cat.hans.Command
 import com.aiocare.model.Units
 import com.aiocare.model.WaveformData
 import com.aiocare.mvvm.Config
@@ -96,7 +97,7 @@ class CustomViewModel(
         updateUiState {
             copy(
                 url = InputData(
-                    "http://192.168.1.217:8080",
+                    "http://192.168.1.221:8080",
                     "url",
                     onValueChanged = { v -> updateUiState { copy(url = url?.copy(value = v)) } }),
                 note = InputData(
@@ -343,7 +344,7 @@ class CustomViewModel(
                                 updateProgress("start execute without recording")
                                 HansProxyApi(
                                     uiState.url?.value ?: ""
-                                ).waveformLoadRun(
+                                ).customWaveform(
                                     HansCommand.waveform(
                                         uiState.customData?.selectedWaveForm ?: ""
                                     )
@@ -388,7 +389,7 @@ class CustomViewModel(
                         updateUiState {
                             copy(
                                 selectData = null,
-                                customData = uiState.customData?.copy(selectedWaveForm = result)
+                                customData = uiState.customData?.copy(selectedWaveForm = result.removePrefix("/"))
                             )
                         }
                     })
