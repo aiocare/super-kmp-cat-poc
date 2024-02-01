@@ -56,9 +56,9 @@ class HansProxyApi(private val hostAddress: String) {
         }
     }
 
-    suspend fun waveform(hansCommand: HansCommand): Response {
+    suspend fun waveformLoadRun(hansCommand: HansCommand): Response {
         val responseText =
-            httpClient.get("$hostAddress/waveform/${hansCommand.command}").bodyAsText()
+            httpClient.get("$hostAddress/waveform/loadRun/${hansCommand.command}").bodyAsText()
                 .removeSuffix("\r")
         return when (responseText) {
             Response.NoInteractive.OK.key -> Response.NoInteractive.OK

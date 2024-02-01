@@ -42,7 +42,7 @@ class Logic(private val hostAddress: String) {
                     api.command(HansCommand.reset())
                 },
                 exhaleAction = {
-                    api.waveform(HansCommand.waveform(it))
+                    api.waveformLoadRun(HansCommand.waveform(it))
                 },
                 inhaleAction = {}
             )
@@ -191,7 +191,7 @@ class Logic(private val hostAddress: String) {
                     api.command(HansCommand.reset())
                 },
                 exhaleAction = {
-                    api.waveform(HansCommand.waveform("C1-C13_(ISO26782)@C$it"))
+                    api.waveformLoadRun(HansCommand.waveform("C1-C13_(ISO26782)@C$it"))
                 },
                 inhaleAction = {}
             )

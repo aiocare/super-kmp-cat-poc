@@ -304,7 +304,7 @@ class CustomViewModel(
     private suspend fun processSequence(sequence: String): SequenceResultData {
         updateProgress(sequence ?: "")
         val api = HansProxyApi(uiState.url?.value ?: "")
-        api.waveform(HansCommand.waveform(sequence))
+        api.waveformLoadRun(HansCommand.waveform(sequence))
         api.command(HansCommand.reset())
 
         val recordedRawSignal = mutableListOf<Int>()
@@ -343,7 +343,7 @@ class CustomViewModel(
                                 updateProgress("start execute without recording")
                                 HansProxyApi(
                                     uiState.url?.value ?: ""
-                                ).waveform(
+                                ).waveformLoadRun(
                                     HansCommand.waveform(
                                         uiState.customData?.selectedWaveForm ?: ""
                                     )
