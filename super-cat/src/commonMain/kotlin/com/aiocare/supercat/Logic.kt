@@ -38,11 +38,13 @@ class Logic(private val hostAddress: String) {
                 flow = Units.FlowUnit.L_S(0.0),
                 volume = Units.VolumeUnit.LITER(0.0),
                 beforeAction = {
-                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+//                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+//                    api.command(HansCommand.reset())
+                    api.waveformLoad(HansCommand.waveform(it))
                     api.command(HansCommand.reset())
                 },
                 exhaleAction = {
-                    api.waveformLoadRun(HansCommand.waveform(it))
+                    api.command(HansCommand.run())
                 },
                 inhaleAction = {}
             )
