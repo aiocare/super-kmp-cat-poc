@@ -24,7 +24,7 @@ import com.aiocare.poc.superCat.custom.CustomViewModel
 fun NavGraph (navController: NavHostController){
     NavHost(
         navController = navController,
-        startDestination = Screens.Custom.route
+        startDestination = Screens.Intro.route
     )
     {
         composable(route = Screens.Cat.route) {

@@ -17,7 +17,6 @@ import com.aiocare.sdk.connecting.getIConnectMobile
 import com.aiocare.sdk.scan.getIScan
 import com.aiocare.sdk.services.readBattery
 import com.aiocare.sdk.services.readFlow
-import com.aiocare.sdk.services.readHardware
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
 import com.aiocare.sdk.services.readTemperature
@@ -269,6 +268,25 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
+                                        ButtonVM(true, "v5") {
+                                            updateUiState {
+                                                copy(
+                                                    examDialogData = null,
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(
+                                                                true,
+                                                                "${it}"
+                                                            ) {
+                                                                v5(it)
+                                                            }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        },
                                         ButtonVM(true, "v7(17l/s)") {
                                             updateUiState {
                                                 copy(
@@ -446,6 +464,15 @@ class SuperCatViewModel(
         actionJob = viewModelScope.launch {
             loadEnv()
             handleSequence(Logic(uiState.url!!.value).v7(type, repeat))
+        }
+    }
+
+    private fun v5(repeat: Int) {
+        clearDialog()
+        actionJob?.cancel()
+        actionJob = viewModelScope.launch {
+            loadEnv()
+            handleSequence(Logic(uiState.url!!.value).v5(repeat))
         }
     }
 

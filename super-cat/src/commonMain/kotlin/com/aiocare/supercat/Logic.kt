@@ -63,6 +63,43 @@ class Logic(private val hostAddress: String) {
     fun v7(type: CalibrationSequenceType, repeat: Int): List<CalibrationActions> =
         prepareV7(type).transformToCalibrationActions().times(repeat)
 
+    fun v5(repeat: Int): List<CalibrationActions> = prepareV5().times(repeat)
+
+    private fun prepareV5(): List<CalibrationActions>{
+        return v5.map {
+            CalibrationActions(
+                flow = Units.FlowUnit.L_S(it.first),
+                volume = Units.VolumeUnit.LITER(it.second),
+                name = "v5",
+                beforeAction = {
+                    if (it.first == 0.10) {
+                        api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+                        api.command(HansCommand.reset())
+                    }
+
+                },
+                exhaleAction = {
+                    api.command(
+                        HansCommand.flow(
+                            Units.FlowUnit.L_S(it.first),
+                            Units.VolumeUnit.LITER(it.second),
+                            HansCommand.Companion.Type.Exhale
+                        )
+                    )
+                },
+                inhaleAction = {
+                    api.command(
+                        HansCommand.flow(
+                            Units.FlowUnit.L_S(it.first),
+                            Units.VolumeUnit.LITER(it.second),
+                            HansCommand.Companion.Type.Inhale
+                        )
+                    )
+                }
+            )
+        }
+    }
+
     private fun List<Units.FlowUnit.L_S>.transformToCalibrationActions(): List<CalibrationActions> =
         this.map { prepareCalibrationActions(it) }
 
