@@ -94,8 +94,7 @@ class HansProxyApi(private val hostAddress: String) {
             ignoreUnknownKeys = true
             isLenient = false
         }
-//        val json = httpClient.get("$hostAddress/files/tree").bodyAsText()
-        val json = "{\"name\":\"waveforms\",\"files\":[],\"dirs\":[{\"name\":\"aaa\",\"files\":[{\"name\":\"Bat2-5Pk.fvw\"}],\"dirs\":[]},{\"name\":\"C1-C13 (ISO26782)\",\"files\":[{\"name\":\"C1.fvw\"},{\"name\":\"C10.fvw\"},{\"name\":\"C11.fvw\"},{\"name\":\"C12.fvw\"},{\"name\":\"C13.fvw\"},{\"name\":\"C2.fvw\"},{\"name\":\"C3.fvw\"},{\"name\":\"C4.fvw\"},{\"name\":\"C5.fvw\"},{\"name\":\"C6.fvw\"},{\"name\":\"C7.fvw\"},{\"name\":\"C8.fvw\"},{\"name\":\"C9.fvw\"}],\"dirs\":[]},{\"name\":\"Custom\",\"files\":[{\"name\":\".DS_Store\"},{\"name\":\"Bat1-7Pk-Adjusted.fvw\"},{\"name\":\"Bat12-0Pk-Adjusted.fvw\"}],\"dirs\":[]},{\"name\":\"PEF (ISO23747)\",\"files\":[{\"name\":\".DS_Store\"}],\"dirs\":[{\"name\":\"Profile A\",\"files\":[{\"name\":\"Aat1-7Pk.fvw\"},{\"name\":\"Aat10-0Pk.fvw\"},{\"name\":\"Aat12-0Pk.fvw\"},{\"name\":\"Aat14-5Pk.fvw\"},{\"name\":\"Aat17-0Pk.fvw\"},{\"name\":\"Aat2-5Pk.fvw\"},{\"name\":\"Aat3-0Pk.fvw\"},{\"name\":\"Aat3-3Pk.fvw\"},{\"name\":\"Aat5-0Pk.fvw\"},{\"name\":\"Aat6-0Pk.fvw\"},{\"name\":\"Aat7-5Pk.fvw\"},{\"name\":\"Aat9-0Pk.fvw\"}],\"dirs\":[]},{\"name\":\"Profile B\",\"files\":[{\"name\":\".DS_Store\"},{\"name\":\"Bat1-7Pk.fvw\"},{\"name\":\"Bat10-0Pk.fvw\"},{\"name\":\"Bat12-0Pk.fvw\"},{\"name\":\"Bat14-5Pk.fvw\"},{\"name\":\"Bat17-0Pk.fvw\"},{\"name\":\"Bat2-5Pk.fvw\"},{\"name\":\"Bat3-0Pk.fvw\"},{\"name\":\"Bat3-3Pk.fvw\"},{\"name\":\"Bat5-0Pk.fvw\"},{\"name\":\"Bat6-0Pk.fvw\"},{\"name\":\"Bat7-5Pk.fvw\"},{\"name\":\"Bat9-0Pk.fvw\"}],\"dirs\":[]}]}]}"
+        val json = httpClient.get("$hostAddress/files/tree").bodyAsText()
         return jsonSerializer.decodeFromString(json)
     }
 }

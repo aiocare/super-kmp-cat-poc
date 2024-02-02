@@ -18,6 +18,10 @@ class HansCommand private constructor(private val rawCommand: String) {
 
         fun run() = HansCommand("Run")
 
+        fun readTemperature() = HansCommand("SendData Temperature")
+
+        fun readHumidity() = HansCommand("SendData RH")
+
         fun volume(volume: Units.VolumeUnit.LITER) = HansCommand("Volume ${volume.value}")
 
         fun flow(

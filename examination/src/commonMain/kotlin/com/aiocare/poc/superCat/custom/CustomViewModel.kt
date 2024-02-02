@@ -9,6 +9,7 @@ import com.aiocare.poc.calibration.EnvironmentalData
 import com.aiocare.poc.ktor.Api
 import com.aiocare.poc.searchDevice.DeviceItem
 import com.aiocare.poc.superCat.DialogData
+import com.aiocare.poc.superCat.ErrorChecker
 import com.aiocare.poc.superCat.InitDialogData
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.poc.superCat.RawDataType
@@ -51,8 +52,10 @@ data class CustomUiState(
     val selectData: SelectData? = null,
     val loading: Boolean = false,
     val repeatSendingDialog: DialogData? = null,
-    val initDialogBtn: ButtonVM = ButtonVM(true, "init"){}
-    )
+    val initDialogBtn: ButtonVM = ButtonVM(true, "init") {},
+    val startCollectingBtn: ButtonVM = ButtonVM(true, "collect env") {
+    },
+)
 
 data class SelectData(val dir: Dir, val onSelected: (String) -> Unit)
 
@@ -62,13 +65,13 @@ data class CustomData(
     val executeBtn: ButtonVM,
     val sendBtn: ButtonVM,
     val executeWithoutRecordingBtn: ButtonVM,
-    val temperatureAndHumidity: String = "",
     val selectedWaveForm: String = "",
     val info: String = "",
     val results: MutableList<CustomViewModel.SequenceResultData> = mutableListOf(),
     val zeroFlow: List<Int>? = null,
     val before: EnvironmentalData? = null,
-    val beforeTime: Long? = null
+    val beforeTime: Long? = null,
+    val currentEnvData: String = "",
 )
 
 class CustomViewModel(
@@ -129,8 +132,36 @@ class CustomViewModel(
                             initDataDialog = uiState.initDataDialog?.copy(visible = true)
                         )
                     }
-                })
+                }),
+                startCollectingBtn = uiState.startCollectingBtn.copy(onClickAction = {
+                    viewModelScope.launch {
+                        setupCollectingEnv()
+                    }
+                }),
             )
+        }
+    }
+
+    private suspend fun setupCollectingEnv() {
+        actionJob?.cancelAndJoin()
+        actionJob = viewModelScope.launch {
+            while (true) {
+                try {
+                    HansProxyApi(uiState.url?.value ?: "").apply {
+                        val temp = (command(HansCommand.readTemperature()))
+                        val hum = (command(HansCommand.readHumidity()))
+                        if (temp is Response.TEXT && hum is Response.TEXT)
+                            updateUiState {
+                                copy(customData = customData?.copy(currentEnvData = "temp=${temp.response},\nhum=${hum.response}"))
+                            }
+                        delay(500)
+                    }
+                }catch (e: Exception){
+                    updateUiState {
+                        copy(customData = customData?.copy(currentEnvData = "error ${e.message}"))
+                    }
+                }
+            }
         }
     }
 
@@ -229,6 +260,7 @@ class CustomViewModel(
         try {
             sequence?.let {
                 viewModelScope.launch {
+                    actionJob?.cancelAndJoin()
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
@@ -306,7 +338,7 @@ class CustomViewModel(
                 val userJob: Deferred<Unit> = async { delay(5000) }
                 userJob.await()
                 job.cancelAndJoin()
-//                ErrorChecker.checkZeroFlowAndThrow(out)
+                ErrorChecker.checkZeroFlowAndThrow(out)
                 return@coroutineScope out
             }
             updateUiState { copy(customData = uiState.customData?.copy(zeroFlow = result)) }
@@ -331,15 +363,14 @@ class CustomViewModel(
 
         val recordedRawSignal = mutableListOf<Int>()
         var recordJob: Job?
-        val temperature = api.command(HansCommand.rawCommand("SendData Temperature"))
+        val temperature = api.command(HansCommand.readTemperature())
         updateProgress("temperature = ${(temperature as Response.TEXT).response}")
-        val humidity = api.command(HansCommand.rawCommand("SendData RH"))
+        val humidity = api.command(HansCommand.readHumidity())
         updateProgress("humidity = ${(humidity as Response.TEXT).response}")
         return coroutineScope {
             recordJob = launch {
                 device?.readFlow()?.collect {
                     it.forEach {
-                        println("Xdddd ${it}")
                         recordedRawSignal.add(it)
                     }
                 }
@@ -374,8 +405,9 @@ class CustomViewModel(
                     },
                     executeWithoutRecordingBtn = ButtonVM(true, "execute without recording") {
                         viewModelScope.launch {
+                            actionJob?.cancelAndJoin()
                             try {
-                                updateProgress("start execute without recording")
+                                updateProgress("start execute without recording, load")
                                 HansProxyApi(
                                     uiState.url?.value ?: ""
                                 ).waveformLoad(
@@ -383,7 +415,9 @@ class CustomViewModel(
                                         uiState.customData?.selectedWaveForm ?: ""
                                     )
                                 )
+                                updateProgress("start execute without recording, reset")
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
+                                updateProgress("start execute without recording, run")
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.run())
                                 updateProgress("finish execute without recording")
                             } catch (e: Exception) {
@@ -394,6 +428,7 @@ class CustomViewModel(
                     resetBtn = ButtonVM(true, "reset") {
                         viewModelScope.launch {
                             try {
+                                actionJob?.cancelAndJoin()
                                 updateProgress("reseting...")
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
                                 updateProgress("reseting finished")
@@ -404,6 +439,7 @@ class CustomViewModel(
                     },
                     sendBtn = ButtonVM(true, "send") {
                         viewModelScope.launch {
+                            actionJob?.cancelAndJoin()
                             afterSendData()
                         }
                     }
@@ -458,6 +494,7 @@ class CustomViewModel(
         )
         trySendToApi(request)
     }
+
     private suspend fun trySendToApi(request: Api.PostData) {
         try {
             val response = Api().postNewRawData(request)
