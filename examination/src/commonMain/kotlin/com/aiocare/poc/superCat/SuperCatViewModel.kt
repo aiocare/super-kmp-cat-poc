@@ -46,8 +46,8 @@ data class SuperCatUiState(
     val note: InputData? = null,
     val hansSerial: InputData? = null,
     val disconnectBtn: ButtonVM = ButtonVM(visible = false, text = "disconnect"),
-    val examBtn: ButtonVM = ButtonVM(visible = false, text = "exams"),
-    val envBtn: ButtonVM = ButtonVM(visible = false, text = "env"),
+    val examBtn: ButtonVM = ButtonVM(visible = false, text = "Sequences"),
+    val envBtn: ButtonVM = ButtonVM(visible = false, text = "read device env"),
     val envAfterBtn: ButtonVM = ButtonVM(visible = false, text = "batt"),
     val info: String = "",
     val progress: String = "",
@@ -64,7 +64,7 @@ data class SuperCatUiState(
     val repeatSendingDialog: DialogData? = null,
     val initDataDialog: InitDialogData? = null,
     val zeroFlowDialog: ZeroFlowDialogData? = null,
-    val showInitAgain: ButtonVM = ButtonVM(true, "init dialog") {}
+    val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {}
 )
 
 data class ZeroFlowDialogData(val message: String?, val close: () -> Unit)
@@ -246,7 +246,7 @@ class SuperCatViewModel(
                             updateUiState {
                                 copy(examDialogData = ExamDialogData(
                                     listOf(
-                                        ButtonVM(true, "v7") {
+                                        ButtonVM(true, "calibration seq v7") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -287,7 +287,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "v7(17l/s)") {
+                                        ButtonVM(true, "calibration seq v7 17l/s") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -309,7 +309,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "c1-c11") {
+                                        ButtonVM(true, "ISO c1-c11") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -326,7 +326,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "pef") {
+                                        ButtonVM(true, "PEF (Profile A+B)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -341,7 +341,7 @@ class SuperCatViewModel(
                                                     }
                                                 )
                                             }
-                                        }, ButtonVM(true, "pefA") {
+                                        }, ButtonVM(true, "PEF ( Profile A)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -357,7 +357,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "pefB") {
+                                        ButtonVM(true, "PEF ( Profile B)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -373,7 +373,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "pefB adj") {
+                                        ButtonVM(true, "PEF (Profile V Adjusted)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,

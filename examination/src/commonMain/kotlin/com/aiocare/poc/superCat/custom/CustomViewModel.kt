@@ -53,8 +53,8 @@ data class CustomUiState(
     val loading: Boolean = false,
     val repeatSendingDialog: DialogData? = null,
     val errorData: ErrorData? = null,
-    val initDialogBtn: ButtonVM = ButtonVM(true, "init") {},
-    val startCollectingBtn: ButtonVM = ButtonVM(true, "collect env") {
+    val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
+    val startCollectingBtn: ButtonVM = ButtonVM(true, "hans temperature/humidity") {
     },
 )
 
@@ -400,13 +400,13 @@ class CustomViewModel(
         updateUiState {
             copy(
                 customData = CustomData(
-                    selectBtn = ButtonVM(true, "select") {
+                    selectBtn = ButtonVM(true, "Choose waveform") {
                         selectSequence()
                     },
-                    executeBtn = ButtonVM(true, "execute") {
+                    executeBtn = ButtonVM(true, "Run waveform") {
                         executeSequence(uiState.customData?.selectedWaveForm)
                     },
-                    executeWithoutRecordingBtn = ButtonVM(true, "execute without recording") {
+                    executeWithoutRecordingBtn = ButtonVM(true, "run waveform without recording") {
                         viewModelScope.launch {
                             actionJob?.cancelAndJoin()
                             try {
@@ -428,7 +428,7 @@ class CustomViewModel(
                             }
                         }
                     },
-                    resetBtn = ButtonVM(true, "reset") {
+                    resetBtn = ButtonVM(true, "hans Reset") {
                         viewModelScope.launch {
                             try {
                                 actionJob?.cancelAndJoin()
@@ -440,7 +440,7 @@ class CustomViewModel(
                             }
                         }
                     },
-                    sendBtn = ButtonVM(true, "send") {
+                    sendBtn = ButtonVM(true, "save results") {
                         viewModelScope.launch {
                             actionJob?.cancelAndJoin()
                             afterSendData()
