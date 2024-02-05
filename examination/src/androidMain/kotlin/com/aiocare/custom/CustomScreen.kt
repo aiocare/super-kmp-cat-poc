@@ -168,6 +168,9 @@ fun CustomDataView(customData: CustomData?) {
             if(customData.results.isNotEmpty())
                 RoundedBox(title = "recorded data", description = customData.results
                 .joinToString("\n") { it.name })
+            customData.history.forEachIndexed { index, strings ->
+                RoundedBox(title = "History #${index+1}", description = strings.joinToString("\n"))
+            }
         }
     }
 }

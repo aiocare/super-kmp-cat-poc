@@ -73,6 +73,7 @@ data class CustomData(
     val before: EnvironmentalData? = null,
     val beforeTime: Long? = null,
     val currentEnvData: String = "",
+    val history: MutableList<List<String>> = mutableListOf()
 )
 
 class CustomViewModel(
@@ -499,6 +500,18 @@ class CustomViewModel(
         try {
             val response = Api().postNewRawData(request)
             updateProgress(response)
+            val current = uiState.customData?.results?.map { it.name }?: listOf()
+           val added =  (uiState.customData?.history?: mutableListOf()).apply {
+               add(current)
+           }
+            updateUiState {
+                copy(
+                    customData = uiState.customData?.copy(
+                        results = mutableListOf(),
+                        history = added
+                    )
+                )
+            }
             setupCollectingEnv()
         } catch (e: Exception) {
             updateUiState {
