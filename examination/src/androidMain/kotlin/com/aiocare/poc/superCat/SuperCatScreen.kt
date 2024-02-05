@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.aiocare.KeepScreenOn
 import com.aiocare.SimpleButton
 import com.aiocare.examination.R
@@ -34,13 +35,15 @@ import com.aiocare.poc.calibration.parseTime
 import com.aiocare.util.ButtonVM
 
 @Composable
-fun SuperCatScreen(viewModel: SuperCatViewModel) {
+fun SuperCatScreen(viewModel: SuperCatViewModel, navController: NavController) {
 
     BackHandler {}
 
     KeepScreenOn()
 
-    LaunchedEffect(key1 = "", block = { viewModel.initViewModel() })
+    LaunchedEffect(key1 = "", block = { viewModel.initViewModel{
+        navController.navigate(it)
+    } })
 
     val devicesScrollState = rememberScrollState()
 
@@ -57,7 +60,6 @@ fun SuperCatScreen(viewModel: SuperCatViewModel) {
         mediaPlayerFail.start()
         viewModel.playingStarted()
     }
-
 
     Column {
         if (viewModel.uiState.devices.isNotEmpty())
@@ -92,7 +94,10 @@ fun SuperCatScreen(viewModel: SuperCatViewModel) {
                     onValueChange = { data.onValueChanged.invoke(it) })
             }
         val scrollState = rememberScrollState()
-        SimpleButton(buttonVM = viewModel.uiState.showInitAgain)
+        Row {
+            SimpleButton(buttonVM = viewModel.uiState.showInitAgain)
+            SimpleButton(buttonVM = viewModel.uiState.navCustomBtn)
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -131,7 +136,8 @@ fun ZeroFlowDialog(zeroFlowDialog: ZeroFlowDialogData?) {
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Column {
-                    Text(modifier = Modifier.fillMaxWidth()
+                    Text(modifier = Modifier
+                        .fillMaxWidth()
                         .padding(top = 8.dp)
                         .wrapContentSize(Alignment.Center)
                         , text = it.message?:"")

@@ -1,5 +1,6 @@
 package com.aiocare.poc.superCat.custom
 
+import com.aiocare.Screens
 import com.aiocare.model.WaveformData
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
@@ -54,6 +55,7 @@ data class CustomUiState(
     val repeatSendingDialog: DialogData? = null,
     val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
+    val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat"){}
 )
 
 data class ErrorData(val title: String, val description: String, val onClose: () -> Unit)
@@ -104,7 +106,7 @@ class CustomViewModel(
         }
     }
 
-    fun initViewModel() {
+    fun initViewModel(navigate: (String) -> Unit) {
         prepareInitDialog()
         startSearching()
         updateUiState {
@@ -135,6 +137,10 @@ class CustomViewModel(
                         )
                     }
                 }),
+                navSuperCatBtn = uiState.navSuperCatBtn.copy(onClickAction = {
+                    disconnect()
+                    navigate.invoke(Screens.SuperCat.route)
+                })
             )
         }
     }

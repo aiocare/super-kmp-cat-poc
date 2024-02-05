@@ -2,6 +2,7 @@ package com.aiocare.custom
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,7 +51,9 @@ fun CustomScreen(
 
     KeepScreenOn()
 
-    LaunchedEffect(key1 = "", block = { viewModel.initViewModel() })
+    LaunchedEffect(key1 = "", block = { viewModel.initViewModel{
+        navController.navigate(it)
+    } })
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         if (viewModel.uiState.devices.isNotEmpty())
@@ -84,9 +87,10 @@ fun CustomScreen(
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = if (data.numberKeyboardType) KeyboardType.Number else KeyboardType.Text),
                     onValueChange = { data.onValueChanged.invoke(it) })
             }
-        Row {
+        Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.disconnectBtn)
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.initDialogBtn)
+            SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.navSuperCatBtn)
         }
         CustomDataView(viewModel.uiState.customData)
     }

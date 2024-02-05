@@ -1,5 +1,6 @@
 package com.aiocare.poc.superCat
 
+import com.aiocare.Screens
 import com.aiocare.model.SteadyFlowData
 import com.aiocare.model.WaveformData
 import com.aiocare.mvvm.Config
@@ -64,7 +65,8 @@ data class SuperCatUiState(
     val repeatSendingDialog: DialogData? = null,
     val initDataDialog: InitDialogData? = null,
     val zeroFlowDialog: ZeroFlowDialogData? = null,
-    val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {}
+    val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {},
+    val navCustomBtn: ButtonVM = ButtonVM(false, "Nav to custom"){}
 )
 
 data class ZeroFlowDialogData(val message: String?, val close: () -> Unit)
@@ -100,7 +102,7 @@ data class InputData(
 )
 
 class SuperCatViewModel(
-    config: Config
+    config: Config,
 ) : StatefulViewModel<SuperCatUiState>(SuperCatUiState(), config) {
 
     private var scanJob: Job? = null
@@ -128,7 +130,7 @@ class SuperCatViewModel(
         }
     }
 
-    fun initViewModel() {
+    fun initViewModel(navigate: (String) -> Unit) {
         prepareInitDialog()
         startSearching()
         updateUiState {
@@ -153,7 +155,14 @@ class SuperCatViewModel(
                             initDataDialog = uiState.initDataDialog?.copy(visible = true)
                         )
                     }
-                })
+                }),
+                navCustomBtn = uiState.navCustomBtn.copy(
+                    visible = true,
+                    onClickAction = {
+                        disconnect()
+                        navigate(Screens.Custom.route)
+                    }
+                )
             )
         }
     }

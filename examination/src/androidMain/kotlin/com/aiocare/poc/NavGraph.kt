@@ -38,7 +38,7 @@ fun NavGraph (navController: NavHostController){
         }
         composable(route = Screens.Custom.route) {
             CustomScreen(
-                viewModel = CustomViewModel(createDefaultConfig()),
+                viewModel = customCatVM,
                 navController = navController
             )
         }
@@ -58,11 +58,12 @@ fun NavGraph (navController: NavHostController){
         }
         composable(route = Screens.SuperCat.route) {
             SuperCatScreen(
-                viewModel = vm,
-//                navController = navController
+                viewModel = superCatVM,
+                navController = navController
             )
         }
     }
 }
 
-val vm by lazy { SuperCatViewModel(createDefaultConfig()) }
+val superCatVM by lazy { SuperCatViewModel(createDefaultConfig()) }
+val customCatVM by lazy { CustomViewModel(createDefaultConfig()) }
