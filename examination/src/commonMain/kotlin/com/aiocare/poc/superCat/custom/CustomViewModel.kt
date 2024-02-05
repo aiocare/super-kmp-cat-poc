@@ -54,8 +54,6 @@ data class CustomUiState(
     val repeatSendingDialog: DialogData? = null,
     val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
-    val startCollectingBtn: ButtonVM = ButtonVM(true, "hans temperature/humidity") {
-    },
 )
 
 data class ErrorData(val title: String, val description: String, val onClose: () -> Unit)
@@ -134,11 +132,6 @@ class CustomViewModel(
                         copy(
                             initDataDialog = uiState.initDataDialog?.copy(visible = true)
                         )
-                    }
-                }),
-                startCollectingBtn = uiState.startCollectingBtn.copy(onClickAction = {
-                    viewModelScope.launch {
-                        setupCollectingEnv()
                     }
                 }),
             )
@@ -269,6 +262,7 @@ class CustomViewModel(
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
+                    setupCollectingEnv()
                 } catch (e: Exception) {
                     updateProgress("executing sequence, error=${e.message}")
                 }
@@ -424,6 +418,7 @@ class CustomViewModel(
                                 updateProgress("start execute without recording, run")
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.run())
                                 updateProgress("finish execute without recording")
+                                setupCollectingEnv()
                             } catch (e: Exception) {
                                 updateProgress("error execute without recording = ${e.message}")
                             }
@@ -436,6 +431,7 @@ class CustomViewModel(
                                 updateProgress("reseting...")
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
                                 updateProgress("reseting finished")
+                                setupCollectingEnv()
                             } catch (e: Exception) {
                                 updateProgress("error reseting = ${e.message}")
                             }
@@ -503,6 +499,7 @@ class CustomViewModel(
         try {
             val response = Api().postNewRawData(request)
             updateProgress(response)
+            setupCollectingEnv()
         } catch (e: Exception) {
             updateUiState {
                 copy(
@@ -543,6 +540,7 @@ class CustomViewModel(
                         })
                     )
                 }
+                setupCollectingEnv()
             } catch (e: Exception) {
                 showError("Erorr", e)
             }

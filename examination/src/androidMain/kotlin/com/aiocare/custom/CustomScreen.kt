@@ -88,7 +88,7 @@ fun CustomScreen(
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.disconnectBtn)
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.initDialogBtn)
         }
-        CustomDataView(viewModel.uiState.customData, viewModel.uiState.startCollectingBtn)
+        CustomDataView(viewModel.uiState.customData)
     }
     viewModel.uiState.selectData?.let { selectedData ->
         Box(modifier = Modifier
@@ -145,7 +145,7 @@ fun SimpleButtonWithoutMargin(buttonVM: ButtonVM){
 }
 
 @Composable
-fun CustomDataView(customData: CustomData?, startCollectingBtn: ButtonVM) {
+fun CustomDataView(customData: CustomData?) {
     customData?.let {
         Column {
             sequenceOf(
@@ -155,7 +155,6 @@ fun CustomDataView(customData: CustomData?, startCollectingBtn: ButtonVM) {
                 customData.executeWithoutRecordingBtn,
                 if(customData.results.isNotEmpty())
                 customData.sendBtn else null,
-                startCollectingBtn,
             ).filterNotNull().chunked(2).forEach {
                 Row {
                     it.forEach {
