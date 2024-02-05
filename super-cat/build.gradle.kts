@@ -3,11 +3,12 @@ plugins {
     kotlin("native.cocoapods")
     id("com.android.library")
     id("org.jlleitschuh.gradle.ktlint")
+    kotlin("plugin.serialization").version("1.9.20")
     id("org.jetbrains.dokka")
 }
 
 group = "com.aiocare.supercat"
-version = "2.0.12"
+version = "2.0.14"
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
@@ -70,6 +71,8 @@ kotlin {
                 implementation("com.juul.kable:core:0.25.1")
                 implementation("com.squareup.okio:okio:3.5.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
+
 
                 implementation("io.ktor:ktor-client-core:2.3.5")
                 implementation("io.ktor:ktor-client-content-negotiation:2.3.5")

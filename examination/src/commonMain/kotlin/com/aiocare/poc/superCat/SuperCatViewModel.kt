@@ -1,5 +1,6 @@
 package com.aiocare.poc.superCat
 
+import com.aiocare.Screens
 import com.aiocare.model.SteadyFlowData
 import com.aiocare.model.WaveformData
 import com.aiocare.mvvm.Config
@@ -17,7 +18,6 @@ import com.aiocare.sdk.connecting.getIConnectMobile
 import com.aiocare.sdk.scan.getIScan
 import com.aiocare.sdk.services.readBattery
 import com.aiocare.sdk.services.readFlow
-import com.aiocare.sdk.services.readHardware
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
 import com.aiocare.sdk.services.readTemperature
@@ -47,8 +47,8 @@ data class SuperCatUiState(
     val note: InputData? = null,
     val hansSerial: InputData? = null,
     val disconnectBtn: ButtonVM = ButtonVM(visible = false, text = "disconnect"),
-    val examBtn: ButtonVM = ButtonVM(visible = false, text = "exams"),
-    val envBtn: ButtonVM = ButtonVM(visible = false, text = "env"),
+    val examBtn: ButtonVM = ButtonVM(visible = false, text = "Sequences"),
+    val envBtn: ButtonVM = ButtonVM(visible = false, text = "read device env"),
     val envAfterBtn: ButtonVM = ButtonVM(visible = false, text = "batt"),
     val info: String = "",
     val progress: String = "",
@@ -65,7 +65,8 @@ data class SuperCatUiState(
     val repeatSendingDialog: DialogData? = null,
     val initDataDialog: InitDialogData? = null,
     val zeroFlowDialog: ZeroFlowDialogData? = null,
-    val showInitAgain: ButtonVM = ButtonVM(true, "init dialog") {}
+    val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {},
+    val navCustomBtn: ButtonVM = ButtonVM(false, "Nav to custom"){}
 )
 
 data class ZeroFlowDialogData(val message: String?, val close: () -> Unit)
@@ -101,7 +102,7 @@ data class InputData(
 )
 
 class SuperCatViewModel(
-    config: Config
+    config: Config,
 ) : StatefulViewModel<SuperCatUiState>(SuperCatUiState(), config) {
 
     private var scanJob: Job? = null
@@ -129,7 +130,7 @@ class SuperCatViewModel(
         }
     }
 
-    fun initViewModel() {
+    fun initViewModel(navigate: (String) -> Unit) {
         prepareInitDialog()
         startSearching()
         updateUiState {
@@ -154,7 +155,14 @@ class SuperCatViewModel(
                             initDataDialog = uiState.initDataDialog?.copy(visible = true)
                         )
                     }
-                })
+                }),
+                navCustomBtn = uiState.navCustomBtn.copy(
+                    visible = true,
+                    onClickAction = {
+                        disconnect()
+                        navigate(Screens.Custom.route)
+                    }
+                )
             )
         }
     }
@@ -247,7 +255,7 @@ class SuperCatViewModel(
                             updateUiState {
                                 copy(examDialogData = ExamDialogData(
                                     listOf(
-                                        ButtonVM(true, "v7") {
+                                        ButtonVM(true, "calibration seq v7") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -269,7 +277,26 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "v7(17l/s)") {
+                                        ButtonVM(true, "calibration seq v5") {
+                                            updateUiState {
+                                                copy(
+                                                    examDialogData = null,
+                                                    repeatDialog = RepeatDialogData(
+                                                        (1..5).map {
+                                                            ButtonVM(
+                                                                true,
+                                                                "${it}"
+                                                            ) {
+                                                                v5(it)
+                                                            }
+                                                        }
+                                                    ) {
+                                                        updateUiState { copy(repeatDialog = null) }
+                                                    }
+                                                )
+                                            }
+                                        },
+                                        ButtonVM(true, "calibration seq v7 17l/s") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -291,7 +318,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "c1-c11") {
+                                        ButtonVM(true, "ISO c1-c11") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -308,7 +335,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "pef") {
+                                        ButtonVM(true, "PEF(Profile A+B)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -323,7 +350,7 @@ class SuperCatViewModel(
                                                     }
                                                 )
                                             }
-                                        }, ButtonVM(true, "pefA") {
+                                        }, ButtonVM(true, "PEF(Profile A)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -339,7 +366,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "pefB") {
+                                        ButtonVM(true, "PEF(Profile B)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -355,7 +382,7 @@ class SuperCatViewModel(
                                                 )
                                             }
                                         },
-                                        ButtonVM(true, "pefB adj") {
+                                        ButtonVM(true, "PEF(Profile V Adjusted)") {
                                             updateUiState {
                                                 copy(
                                                     examDialogData = null,
@@ -446,6 +473,15 @@ class SuperCatViewModel(
         actionJob = viewModelScope.launch {
             loadEnv()
             handleSequence(Logic(uiState.url!!.value).v7(type, repeat))
+        }
+    }
+
+    private fun v5(repeat: Int) {
+        clearDialog()
+        actionJob?.cancel()
+        actionJob = viewModelScope.launch {
+            loadEnv()
+            handleSequence(Logic(uiState.url!!.value).v5(repeat))
         }
     }
 

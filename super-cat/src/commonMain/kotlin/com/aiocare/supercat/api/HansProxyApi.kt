@@ -8,6 +8,7 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
 
 class HansProxyApi(private val hostAddress: String) {
 
@@ -55,14 +56,45 @@ class HansProxyApi(private val hostAddress: String) {
         }
     }
 
-    suspend fun waveform(hansCommand: HansCommand): Response {
+    suspend fun waveformLoadRun(hansCommand: HansCommand): Response {
         val responseText =
-            httpClient.get("$hostAddress/waveform/${hansCommand.command}").bodyAsText()
+            httpClient.get("$hostAddress/waveform/loadRun/${hansCommand.command}").bodyAsText()
                 .removeSuffix("\r")
         return when (responseText) {
             Response.NoInteractive.OK.key -> Response.NoInteractive.OK
             Response.NoInteractive.NOT_RECOGNIZED.key -> Response.NoInteractive.NOT_RECOGNIZED
             else -> Response.TEXT(responseText)
         }
+    }
+
+    suspend fun waveformLoad(hansCommand: HansCommand): Response {
+        val responseText =
+            httpClient.get("$hostAddress/waveform/load/${hansCommand.command}").bodyAsText()
+                .removeSuffix("\r")
+        return when (responseText) {
+            Response.NoInteractive.OK.key -> Response.NoInteractive.OK
+            Response.NoInteractive.NOT_RECOGNIZED.key -> Response.NoInteractive.NOT_RECOGNIZED
+            else -> Response.TEXT(responseText)
+        }
+    }
+
+    suspend fun customWaveform(hansCommand: HansCommand): Response {
+        val responseText =
+            httpClient.get("$hostAddress/waveform/custom/${hansCommand.command}").bodyAsText()
+                .removeSuffix("\r")
+        return when (responseText) {
+            Response.NoInteractive.OK.key -> Response.NoInteractive.OK
+            Response.NoInteractive.NOT_RECOGNIZED.key -> Response.NoInteractive.NOT_RECOGNIZED
+            else -> Response.TEXT(responseText)
+        }
+    }
+
+    suspend fun getAvailableSequences(): Dir {
+        val jsonSerializer = Json {
+            ignoreUnknownKeys = true
+            isLenient = false
+        }
+        val json = httpClient.get("$hostAddress/files/tree").bodyAsText()
+        return jsonSerializer.decodeFromString(json)
     }
 }

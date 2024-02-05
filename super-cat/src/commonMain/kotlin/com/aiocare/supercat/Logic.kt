@@ -38,11 +38,13 @@ class Logic(private val hostAddress: String) {
                 flow = Units.FlowUnit.L_S(0.0),
                 volume = Units.VolumeUnit.LITER(0.0),
                 beforeAction = {
-                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+//                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+//                    api.command(HansCommand.reset())
+                    api.waveformLoad(HansCommand.waveform(it))
                     api.command(HansCommand.reset())
                 },
                 exhaleAction = {
-                    api.waveform(HansCommand.waveform(it))
+                    api.command(HansCommand.run())
                 },
                 inhaleAction = {}
             )
@@ -60,6 +62,43 @@ class Logic(private val hostAddress: String) {
 
     fun v7(type: CalibrationSequenceType, repeat: Int): List<CalibrationActions> =
         prepareV7(type).transformToCalibrationActions().times(repeat)
+
+    fun v5(repeat: Int): List<CalibrationActions> = prepareV5().times(repeat)
+
+    private fun prepareV5(): List<CalibrationActions>{
+        return v5.map {
+            CalibrationActions(
+                flow = Units.FlowUnit.L_S(it.first),
+                volume = Units.VolumeUnit.LITER(it.second),
+                name = "v5",
+                beforeAction = {
+                    if (it.first == 0.10) {
+                        api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+                        api.command(HansCommand.reset())
+                    }
+
+                },
+                exhaleAction = {
+                    api.command(
+                        HansCommand.flow(
+                            Units.FlowUnit.L_S(it.first),
+                            Units.VolumeUnit.LITER(it.second),
+                            HansCommand.Companion.Type.Exhale
+                        )
+                    )
+                },
+                inhaleAction = {
+                    api.command(
+                        HansCommand.flow(
+                            Units.FlowUnit.L_S(it.first),
+                            Units.VolumeUnit.LITER(it.second),
+                            HansCommand.Companion.Type.Inhale
+                        )
+                    )
+                }
+            )
+        }
+    }
 
     private fun List<Units.FlowUnit.L_S>.transformToCalibrationActions(): List<CalibrationActions> =
         this.map { prepareCalibrationActions(it) }
@@ -191,7 +230,7 @@ class Logic(private val hostAddress: String) {
                     api.command(HansCommand.reset())
                 },
                 exhaleAction = {
-                    api.waveform(HansCommand.waveform("C1-C13_(ISO26782)@C$it"))
+                    api.waveformLoadRun(HansCommand.waveform("C1-C13_(ISO26782)@C$it"))
                 },
                 inhaleAction = {}
             )

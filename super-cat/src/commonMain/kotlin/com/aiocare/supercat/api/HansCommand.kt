@@ -16,6 +16,12 @@ class HansCommand private constructor(private val rawCommand: String) {
 
         fun reset() = HansCommand("Reset")
 
+        fun run() = HansCommand("Run")
+
+        fun readTemperature() = HansCommand("SendData Temperature")
+
+        fun readHumidity() = HansCommand("SendData RH")
+
         fun volume(volume: Units.VolumeUnit.LITER) = HansCommand("Volume ${volume.value}")
 
         fun flow(
@@ -29,7 +35,7 @@ class HansCommand private constructor(private val rawCommand: String) {
         fun waveform(
             waveFormName: String
         ): HansCommand {
-            return HansCommand(waveFormName)
+            return HansCommand(waveFormName.replace("/","@").removeSuffix(".fvw"))
         }
 
         fun waveformData() = rawCommand("SendSpirometry")

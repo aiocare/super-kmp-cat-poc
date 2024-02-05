@@ -33,7 +33,7 @@ kotlin {
     cocoapods {
         summary = "Some description for the Shared Module"
         homepage = "Link to the Shared Module homepage"
-        version = "2.0.12"
+        version = "2.0.14"
         ios.deploymentTarget = "14.1"
         framework {
             baseName = "examination"
@@ -44,10 +44,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
 
-                implementation("com.aiocare.sdk:spirometer-sdk:0.0.8")
+                implementation("com.aiocare.sdk:spirometer-sdk:+")
                 implementation(project(":super-cat"))
                 implementation("com.aiocare.cortex:cortex:+")
-                implementation("com.aiocare.models:common-models:1.0.4")
+                implementation("com.aiocare.models:common-models:+")
                 implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
                 implementation("com.jstarczewski.kstate:kstate-core:0.0.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -55,8 +55,6 @@ kotlin {
                 implementation("com.patrykandpatrick.vico:compose:1.8.0")
                 implementation(kotlin("reflect"))
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
-
-
                 implementation("io.ktor:ktor-client-core:2.3.5")
                 implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
