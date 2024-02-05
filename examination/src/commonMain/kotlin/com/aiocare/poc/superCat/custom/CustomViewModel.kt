@@ -153,9 +153,10 @@ class CustomViewModel(
                     HansProxyApi(uiState.url?.value ?: "").apply {
                         val temp = (command(HansCommand.readTemperature()))
                         val hum = (command(HansCommand.readHumidity()))
+
                         if (temp is Response.TEXT && hum is Response.TEXT)
                             updateUiState {
-                                copy(customData = customData?.copy(currentEnvData = "temp=${temp.response},\nhum=${hum.response}"))
+                                copy(customData = customData?.copy(currentEnvData = "temp=${temp.parse()},\nhum=${hum.parse()}"))
                             }
                         delay(500)
                     }
@@ -367,9 +368,9 @@ class CustomViewModel(
         val recordedRawSignal = mutableListOf<Int>()
         var recordJob: Job?
         val temperature = api.command(HansCommand.readTemperature())
-        updateProgress("temperature = ${(temperature as Response.TEXT).response}")
+        updateProgress("temperature = ${(temperature as Response.TEXT).parse()}")
         val humidity = api.command(HansCommand.readHumidity())
-        updateProgress("humidity = ${(humidity as Response.TEXT).response}")
+        updateProgress("humidity = ${(humidity as Response.TEXT).parse()}")
         return coroutineScope {
             recordJob = launch {
                 device?.readFlow()?.collect {
