@@ -52,10 +52,13 @@ data class CustomUiState(
     val selectData: SelectData? = null,
     val loading: Boolean = false,
     val repeatSendingDialog: DialogData? = null,
+    val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "init") {},
     val startCollectingBtn: ButtonVM = ButtonVM(true, "collect env") {
     },
 )
+
+data class ErrorData(val title: String, val description: String, val onClose: () -> Unit)
 
 data class SelectData(val dir: Dir, val onSelected: (String) -> Unit)
 
@@ -156,10 +159,11 @@ class CustomViewModel(
                             }
                         delay(500)
                     }
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     updateUiState {
                         copy(customData = customData?.copy(currentEnvData = "error ${e.message}"))
                     }
+                    actionJob?.cancelAndJoin()
                 }
             }
         }
@@ -257,17 +261,17 @@ class CustomViewModel(
     }
 
     private fun executeSequence(sequence: String?) {
-        try {
-            sequence?.let {
-                viewModelScope.launch {
+        sequence?.let {
+            viewModelScope.launch {
+                try {
                     actionJob?.cancelAndJoin()
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
+                } catch (e: Exception) {
+                    updateProgress("executing sequence, error=${e.message}")
                 }
             }
-        } catch (e: Exception) {
-            updateProgress("executing sequence, error=${e.message}")
         }
     }
 
@@ -343,7 +347,6 @@ class CustomViewModel(
             }
             updateUiState { copy(customData = uiState.customData?.copy(zeroFlow = result)) }
         }
-
     }
 
     data class SequenceResultData(
@@ -521,23 +524,35 @@ class CustomViewModel(
 
     private fun selectSequence() {
         viewModelScope.launch {
-            val sequences = HansProxyApi(uiState.url?.value ?: "").getAvailableSequences()
-            updateUiState {
-                copy(
-                    selectData = SelectData(sequences, { result ->
-                        updateUiState {
-                            copy(
-                                selectData = null,
-                                customData = uiState.customData?.copy(
-                                    selectedWaveForm = result.removePrefix(
-                                        "/waveforms/"
+            try {
+                val sequences = HansProxyApi(uiState.url?.value ?: "").getAvailableSequences()
+                updateUiState {
+                    copy(
+                        selectData = SelectData(sequences, { result ->
+                            updateUiState {
+                                copy(
+                                    selectData = null,
+                                    customData = uiState.customData?.copy(
+                                        selectedWaveForm = result.removePrefix(
+                                            "/waveforms/"
+                                        )
                                     )
                                 )
-                            )
-                        }
-                    })
-                )
+                            }
+                        })
+                    )
+                }
+            } catch (e: Exception) {
+                showError("Erorr", e)
             }
+        }
+    }
+
+    private fun showError(title: String, e: Exception) {
+        updateUiState {
+            copy(errorData = ErrorData(title, e.message ?: e.toString()) {
+                updateUiState { copy(errorData = null) }
+            })
         }
     }
 

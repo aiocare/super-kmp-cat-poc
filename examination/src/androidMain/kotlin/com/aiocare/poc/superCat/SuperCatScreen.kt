@@ -224,7 +224,6 @@ fun TryAgainDialog(repeatSendingDialog: DialogData?) {
                 SimpleButton(modifier = Modifier.fillMaxWidth(),
                     buttonVM = ButtonVM(true, "Try again sending to api") { it.onAccept() })
             }
-
         }
     }
 }

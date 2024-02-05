@@ -22,18 +22,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.aiocare.KeepScreenOn
+import com.aiocare.SimpleButton
 import com.aiocare.poc.superCat.InitDialog
 import com.aiocare.poc.superCat.TryAgainDialog
 import com.aiocare.poc.superCat.custom.CustomData
 import com.aiocare.poc.superCat.custom.CustomViewModel
+import com.aiocare.poc.superCat.custom.ErrorData
 import com.aiocare.util.ButtonVM
 
 @Composable
@@ -47,7 +52,7 @@ fun CustomScreen(
 
     LaunchedEffect(key1 = "", block = { viewModel.initViewModel() })
 
-    Column {
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         if (viewModel.uiState.devices.isNotEmpty())
             Column(
                 modifier = Modifier
@@ -94,11 +99,37 @@ fun CustomScreen(
         }
     }
     if (viewModel.uiState.loading) {
-        CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
     }
 
     InitDialog(viewModel.uiState.initDataDialog)
     TryAgainDialog(viewModel.uiState.repeatSendingDialog)
+    ErrorDataDialog(errorData = viewModel.uiState.errorData)
+}
+
+@Composable
+fun ErrorDataDialog(errorData: ErrorData?) {
+    errorData?.let {
+        Dialog(onDismissRequest = { errorData.onClose() }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column {
+                    Text(modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        text = errorData.title)
+                    Text(text = errorData.description)
+                    SimpleButton(modifier = Modifier.fillMaxWidth(),
+                        buttonVM = ButtonVM(true, "close") { it.onClose() })
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -122,9 +153,10 @@ fun CustomDataView(customData: CustomData?, startCollectingBtn: ButtonVM) {
                 customData.resetBtn,
                 customData.executeBtn,
                 customData.executeWithoutRecordingBtn,
-                customData.sendBtn,
+                if(customData.results.isNotEmpty())
+                customData.sendBtn else null,
                 startCollectingBtn,
-            ).chunked(2).forEach {
+            ).filterNotNull().chunked(2).forEach {
                 Row {
                     it.forEach {
                         SimpleButtonWithoutMargin(buttonVM = it)
@@ -134,6 +166,9 @@ fun CustomDataView(customData: CustomData?, startCollectingBtn: ButtonVM) {
             RoundedBox(title = "Selected waveform", description = customData.selectedWaveForm)
             RoundedBox(title = "Current info", description = customData.info)
             RoundedBox(title = "current env", description = customData.currentEnvData)
+            if(customData.results.isNotEmpty())
+                RoundedBox(title = "recorded data", description = customData.results
+                .joinToString("\n") { it.name })
         }
     }
 }
