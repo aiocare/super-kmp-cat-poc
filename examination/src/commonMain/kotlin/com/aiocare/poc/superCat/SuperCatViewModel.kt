@@ -66,7 +66,8 @@ data class SuperCatUiState(
     val initDataDialog: InitDialogData? = null,
     val zeroFlowDialog: ZeroFlowDialogData? = null,
     val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {},
-    val navCustomBtn: ButtonVM = ButtonVM(false, "Nav to custom"){}
+    val navCustomBtn: ButtonVM = ButtonVM(false, "Nav to custom") {},
+    val deviceName: String = "",
 )
 
 data class ZeroFlowDialogData(val message: String?, val close: () -> Unit)
@@ -98,7 +99,7 @@ data class InputData(
     val value: String,
     val description: String,
     val onValueChanged: (String) -> Unit,
-    val numberKeyboardType: Boolean = false
+    val numberKeyboardType: Boolean = false,
 )
 
 class SuperCatViewModel(
@@ -109,7 +110,6 @@ class SuperCatViewModel(
     private var timerJob: Job? = null
     private var actionJob: Job? = null
     private var device: IAioCareDevice? = null
-    private var deviceName = ""
     private var beforeTime: Long? = null
     private var operator: String = "not_selected"
 
@@ -227,12 +227,14 @@ class SuperCatViewModel(
                     actionJob?.cancelAndJoin()
                     timerJob?.cancelAndJoin()
                     device = null
-                    deviceName = ""
                     updateProgress("disconnect")
                     updateSequenceName("")
                     startSearching()
                     updateUiState {
-                        copy(after = "", before = EnvironmentalData(), measurementTimer = 0)
+                        copy(
+                            deviceName = "",
+                            after = "", before = EnvironmentalData(), measurementTimer = 0
+                        )
                     }
                 }
             }
@@ -241,13 +243,13 @@ class SuperCatViewModel(
 
     private fun scanClicked(scan: IAioCareScan) {
         viewModelScope.launch {
-            deviceName = scan.getName()
             updateLoader(true)
             device = getIConnectMobile().connectMobile(this, scan)
             scanJob?.cancelAndJoin()
             startObservingState()
             updateUiState {
                 copy(
+                    deviceName = scan.getName(),
                     devices = listOf(),
                     examBtn = examBtn.copy(
                         visible = true,
@@ -435,7 +437,6 @@ class SuperCatViewModel(
     }
 
     private fun disconnect() {
-        deviceName = ""
         updateProgress("disconnect")
         updateSequenceName("")
         viewModelScope.launch {
@@ -444,7 +445,9 @@ class SuperCatViewModel(
             getIConnect().disconnect()
             startSearching()
             updateUiState {
-                copy(after = "", before = EnvironmentalData(), measurementTimer = 0)
+                copy(
+                    deviceName = "",
+                    after = "", before = EnvironmentalData(), measurementTimer = 0)
             }
         }
     }
@@ -603,7 +606,7 @@ class SuperCatViewModel(
                 hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
                 hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
                 appVersion = VersionHolder.version,
-                spirometerDeviceSerial = deviceName,
+                spirometerDeviceSerial = uiState.deviceName,
                 operator = operator,
                 date = calculateDate()
             ),

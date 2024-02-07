@@ -55,7 +55,8 @@ data class CustomUiState(
     val repeatSendingDialog: DialogData? = null,
     val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
-    val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat"){}
+    val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat"){},
+    val deviceName: String = ""
 )
 
 data class ErrorData(val title: String, val description: String, val onClose: () -> Unit)
@@ -75,7 +76,7 @@ data class CustomData(
     val before: EnvironmentalData? = null,
     val beforeTime: Long? = null,
     val currentEnvData: String = "",
-    val history: MutableList<List<String>> = mutableListOf()
+    val history: MutableList<List<String>> = mutableListOf() ,
 )
 
 class CustomViewModel(
@@ -85,7 +86,6 @@ class CustomViewModel(
     private var scanJob: Job? = null
     private var actionJob: Job? = null
     private var device: IAioCareDevice? = null
-    private var deviceName = ""
     private var operator: String = "not_selected"
 
 
@@ -229,12 +229,12 @@ class CustomViewModel(
                 if (!it) {
                     actionJob?.cancelAndJoin()
                     device = null
-                    deviceName = ""
                     startSearching()
                     updateUiState {
                         copy(
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                             customData = null,
+                            deviceName = ""
                         )
                     }
                 }
@@ -245,13 +245,13 @@ class CustomViewModel(
     private fun scanClicked(scan: IAioCareScan) {
         viewModelScope.launch {
             loading(true)
-            deviceName = scan.getName()
             device = getIConnectMobile().connectMobile(this, scan)
             scanJob?.cancelAndJoin()
             startObservingState()
             setupCustomData()
             updateUiState {
                 copy(
+                    deviceName = scan.getName(),
                     devices = listOf(),
                     disconnectBtn = ButtonVM(true, text = "disconnected") {
                         disconnect()
@@ -475,7 +475,7 @@ class CustomViewModel(
                 hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
                 hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
                 appVersion = VersionHolder.version,
-                spirometerDeviceSerial = deviceName,
+                spirometerDeviceSerial = uiState.deviceName,
                 operator = operator,
                 date = calculateDate()
             ),
@@ -585,7 +585,6 @@ class CustomViewModel(
 
     private fun disconnect() {
         loading(true)
-        deviceName = ""
         viewModelScope.launch {
             actionJob?.cancelAndJoin()
             getIConnect().disconnect()
@@ -593,6 +592,7 @@ class CustomViewModel(
             loading(false)
             updateUiState {
                 copy(
+                    deviceName = "",
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                     customData = null
                 )

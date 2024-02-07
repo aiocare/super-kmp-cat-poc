@@ -73,7 +73,8 @@ fun CustomScreen(
                     )
                 }
             }
-
+        if(viewModel.uiState.deviceName.isNotEmpty())
+            RoundedBox(title = "Connected device", description = viewModel.uiState.deviceName)
         listOfNotNull(
             viewModel.uiState.url,
             viewModel.uiState.hansSerial,
