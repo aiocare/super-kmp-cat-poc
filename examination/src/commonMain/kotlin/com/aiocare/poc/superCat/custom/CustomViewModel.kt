@@ -265,12 +265,15 @@ class CustomViewModel(
         sequence?.let {
             viewModelScope.launch {
                 try {
+                    loading(true)
                     actionJob?.cancelAndJoin()
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
                     setupCollectingEnv()
+                    loading(false)
                 } catch (e: Exception) {
+                    loading(false)
                     updateProgress("executing sequence, error=${e.message}")
                 }
             }
@@ -412,6 +415,7 @@ class CustomViewModel(
                         viewModelScope.launch {
                             actionJob?.cancelAndJoin()
                             try {
+                                loading(true)
                                 updateProgress("start execute without recording, load")
                                 HansProxyApi(
                                     uiState.url?.value ?: ""
@@ -426,7 +430,9 @@ class CustomViewModel(
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.run())
                                 updateProgress("finish execute without recording")
                                 setupCollectingEnv()
+                                loading(false)
                             } catch (e: Exception) {
+                                loading(false)
                                 updateProgress("error execute without recording = ${e.message}")
                             }
                         }
@@ -504,6 +510,7 @@ class CustomViewModel(
 
     private suspend fun trySendToApi(request: Api.PostData) {
         try {
+            loading(true)
             val response = Api().postNewRawData(request)
             updateProgress(response)
             val current = uiState.customData?.results?.map { it.name }?: listOf()
@@ -518,8 +525,10 @@ class CustomViewModel(
                     )
                 )
             }
+            loading(false)
             setupCollectingEnv()
         } catch (e: Exception) {
+            loading(false)
             updateUiState {
                 copy(
                     repeatSendingDialog = DialogData({
