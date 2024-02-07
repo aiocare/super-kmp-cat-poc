@@ -495,7 +495,7 @@ class CustomViewModel(
                     it.timestamp
                 )
             },
-            type = RecordingType.ISO_PEF.name,
+            type = RecordingType.CUSTOM_SEQUENCE.name,
             rawDataType = RawDataType.WAVEFORM.name,
             notes = uiState.note?.value ?: ""
         )
