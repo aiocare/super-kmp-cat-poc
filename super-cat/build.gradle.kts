@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.aiocare.supercat"
-version = "2.0.14"
+version = "2.0.15"
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
@@ -72,7 +72,6 @@ kotlin {
                 implementation("com.squareup.okio:okio:3.5.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
-
 
                 implementation("io.ktor:ktor-client-core:2.3.5")
                 implementation("io.ktor:ktor-client-content-negotiation:2.3.5")

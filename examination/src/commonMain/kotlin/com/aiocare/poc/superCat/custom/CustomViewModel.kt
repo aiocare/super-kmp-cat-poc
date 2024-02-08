@@ -12,6 +12,7 @@ import com.aiocare.poc.searchDevice.DeviceItem
 import com.aiocare.poc.superCat.DialogData
 import com.aiocare.poc.superCat.ErrorChecker
 import com.aiocare.poc.superCat.InitDialogData
+import com.aiocare.poc.superCat.InitHolder
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.poc.superCat.RawDataType
 import com.aiocare.poc.superCat.RecordingType
@@ -33,12 +34,15 @@ import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import kotlinx.datetime.Clock
 
 data class CustomUiState(
@@ -55,7 +59,8 @@ data class CustomUiState(
     val repeatSendingDialog: DialogData? = null,
     val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
-    val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat"){}
+    val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat") {},
+    val deviceName: String = ""
 )
 
 data class ErrorData(val title: String, val description: String, val onClose: () -> Unit)
@@ -75,7 +80,7 @@ data class CustomData(
     val before: EnvironmentalData? = null,
     val beforeTime: Long? = null,
     val currentEnvData: String = "",
-    val history: MutableList<List<String>> = mutableListOf()
+    val history: MutableList<List<String>> = mutableListOf(),
 )
 
 class CustomViewModel(
@@ -85,7 +90,6 @@ class CustomViewModel(
     private var scanJob: Job? = null
     private var actionJob: Job? = null
     private var device: IAioCareDevice? = null
-    private var deviceName = ""
     private var operator: String = "not_selected"
 
 
@@ -112,17 +116,23 @@ class CustomViewModel(
         updateUiState {
             copy(
                 url = InputData(
-                    "http://192.168.1.221:8080",
+                    InitHolder.address?:"http://192.168.1.221:8080",
                     "url",
-                    onValueChanged = { v -> updateUiState { copy(url = url?.copy(value = v)) } }),
+                    onValueChanged = { v ->
+                        InitHolder.address = v
+                        updateUiState { copy(url = url?.copy(value = v)) }
+                    }),
                 note = InputData(
                     "",
                     "note",
                     onValueChanged = { v -> updateUiState { copy(note = note?.copy(value = v)) } }),
                 hansSerial = InputData(
-                    "112-093",
+                    InitHolder.hansName?:"112-093",
                     "HansSerial",
-                    onValueChanged = { v -> updateUiState { copy(hansSerial = hansSerial?.copy(value = v)) } },
+                    onValueChanged = { v -> updateUiState {
+                        InitHolder.hansName = v
+                        copy(hansSerial = hansSerial?.copy(value = v))
+                    } },
                     numberKeyboardType = true
                 ),
                 initDialogBtn = uiState.initDialogBtn.copy(onClickAction = {
@@ -149,76 +159,90 @@ class CustomViewModel(
         actionJob?.cancelAndJoin()
         actionJob = viewModelScope.launch {
             while (true) {
-                try {
-                    HansProxyApi(uiState.url?.value ?: "").apply {
-                        val temp = (command(HansCommand.readTemperature()))
-                        val hum = (command(HansCommand.readHumidity()))
+                withContext(NonCancellable) {
+                    try {
+                        HansProxyApi(uiState.url?.value ?: "").apply {
+                            val temp = (command(HansCommand.readTemperature()))
+                            val hum = (command(HansCommand.readHumidity()))
 
-                        if (temp is Response.TEXT && hum is Response.TEXT)
-                            updateUiState {
-                                copy(customData = customData?.copy(currentEnvData = "temp=${temp.parse()},\nhum=${hum.parse()}"))
-                            }
-                        delay(500)
+                            if (temp is Response.TEXT && hum is Response.TEXT)
+                                updateUiState {
+                                    copy(customData = customData?.copy(currentEnvData = "temp=${temp.parse()},\nhum=${hum.parse()}"))
+                                }
+                            delay(500)
+                        }
+                    } catch (e: Exception) {
+                        updateUiState {
+                            copy(customData = customData?.copy(currentEnvData = "error ${e.message}"))
+                        }
+                        actionJob?.cancelAndJoin()
                     }
-                } catch (e: Exception) {
-                    updateUiState {
-                        copy(customData = customData?.copy(currentEnvData = "error ${e.message}"))
-                    }
-                    actionJob?.cancelAndJoin()
                 }
+                yield()
             }
         }
     }
 
     private fun prepareInitDialog() {
+        InitHolder.operator?.let { operator = it }
         updateUiState {
-            copy(initDataDialog = InitDialogData(
-                hansName = listOf("112-121", "112-093", "112-123").map { current ->
-                    ButtonVM(true, current, {
-                        updateUiState {
-                            copy(
-                                hansSerial = uiState.hansSerial?.copy(value = current),
-                                initDataDialog = uiState.initDataDialog?.copy(selectedName = current)
-                            )
-                        }
-                    })
-                },
-                address = listOf(
-                    "192.168.1.203:8080",
-                    "192.168.1.217:8080",
-                    "192.168.1.183:8080"
-                ).map { current ->
-                    ButtonVM(true, current, {
-                        updateUiState {
-                            copy(
-                                initDataDialog = uiState.initDataDialog?.copy(selectedAddress = current),
-                                url = uiState.url?.copy(value = "http://${current}")
-                            )
-                        }
-                    })
-                },
-                operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
-                    ButtonVM(true, it, {
-                        operator = it
+            copy(
+                url = InitHolder.address?.let { it1 -> uiState.url?.copy(value = it1) },
+                hansSerial = InitHolder.hansName?.let { it1 -> uiState.hansSerial?.copy(value = it1) },
+                initDataDialog = InitDialogData(
+                    visible = !InitHolder.isFilled(),
+                    selectedAddress = InitHolder.address,
+                    selectedOperator = InitHolder.operator,
+                    selectedName = InitHolder.hansName,
+                    hansName = listOf("112-121", "112-093", "112-123").map { current ->
+                        ButtonVM(true, current, {
+                            InitHolder.hansName = current
+                            updateUiState {
+                                copy(
+                                    hansSerial = uiState.hansSerial?.copy(value = current),
+                                    initDataDialog = uiState.initDataDialog?.copy(selectedName = current)
+                                )
+                            }
+                        })
+                    },
+                    address = listOf(
+                        "192.168.1.203:8080",
+                        "192.168.1.217:8080",
+                        "192.168.1.183:8080"
+                    ).map { current ->
+                        ButtonVM(true, current, {
+                            InitHolder.address = current
+                            updateUiState {
+                                copy(
+                                    initDataDialog = uiState.initDataDialog?.copy(selectedAddress = current),
+                                    url = uiState.url?.copy(value = "http://${current}")
+                                )
+                            }
+                        })
+                    },
+                    operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
+                        ButtonVM(true, it, {
+                            operator = it
+                            InitHolder.operator = it
+                            updateUiState {
+                                copy(
+                                    initDataDialog = uiState.initDataDialog?.copy(
+                                        selectedOperator = operator
+                                    )
+                                )
+                            }
+                        })
+                    },
+                    close = {
                         updateUiState {
                             copy(
                                 initDataDialog = uiState.initDataDialog?.copy(
-                                    selectedOperator = operator
+                                    visible = false
                                 )
                             )
                         }
-                    })
-                },
-                close = {
-                    updateUiState {
-                        copy(
-                            initDataDialog = uiState.initDataDialog?.copy(
-                                visible = false
-                            )
-                        )
                     }
-                }
-            )
+                )
             )
         }
     }
@@ -229,12 +253,12 @@ class CustomViewModel(
                 if (!it) {
                     actionJob?.cancelAndJoin()
                     device = null
-                    deviceName = ""
                     startSearching()
                     updateUiState {
                         copy(
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                             customData = null,
+                            deviceName = ""
                         )
                     }
                 }
@@ -245,13 +269,13 @@ class CustomViewModel(
     private fun scanClicked(scan: IAioCareScan) {
         viewModelScope.launch {
             loading(true)
-            deviceName = scan.getName()
             device = getIConnectMobile().connectMobile(this, scan)
             scanJob?.cancelAndJoin()
             startObservingState()
             setupCustomData()
             updateUiState {
                 copy(
+                    deviceName = scan.getName(),
                     devices = listOf(),
                     disconnectBtn = ButtonVM(true, text = "disconnected") {
                         disconnect()
@@ -265,12 +289,15 @@ class CustomViewModel(
         sequence?.let {
             viewModelScope.launch {
                 try {
+                    loading(true)
                     actionJob?.cancelAndJoin()
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
                     setupCollectingEnv()
+                    loading(false)
                 } catch (e: Exception) {
+                    loading(false)
                     updateProgress("executing sequence, error=${e.message}")
                 }
             }
@@ -412,6 +439,7 @@ class CustomViewModel(
                         viewModelScope.launch {
                             actionJob?.cancelAndJoin()
                             try {
+                                loading(true)
                                 updateProgress("start execute without recording, load")
                                 HansProxyApi(
                                     uiState.url?.value ?: ""
@@ -426,7 +454,9 @@ class CustomViewModel(
                                 HansProxyApi(uiState.url?.value ?: "").command(HansCommand.run())
                                 updateProgress("finish execute without recording")
                                 setupCollectingEnv()
+                                loading(false)
                             } catch (e: Exception) {
+                                loading(false)
                                 updateProgress("error execute without recording = ${e.message}")
                             }
                         }
@@ -469,7 +499,7 @@ class CustomViewModel(
                 hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
                 hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
                 appVersion = VersionHolder.version,
-                spirometerDeviceSerial = deviceName,
+                spirometerDeviceSerial = uiState.deviceName,
                 operator = operator,
                 date = calculateDate()
             ),
@@ -495,7 +525,7 @@ class CustomViewModel(
                     it.timestamp
                 )
             },
-            type = RecordingType.ISO_PEF.name,
+            type = RecordingType.CUSTOM_SEQUENCE.name,
             rawDataType = RawDataType.WAVEFORM.name,
             notes = uiState.note?.value ?: ""
         )
@@ -504,12 +534,13 @@ class CustomViewModel(
 
     private suspend fun trySendToApi(request: Api.PostData) {
         try {
+            loading(true)
             val response = Api().postNewRawData(request)
             updateProgress(response)
-            val current = uiState.customData?.results?.map { it.name }?: listOf()
-           val added =  (uiState.customData?.history?: mutableListOf()).apply {
-               add(current)
-           }
+            val current = uiState.customData?.results?.map { it.name } ?: listOf()
+            val added = (uiState.customData?.history ?: mutableListOf()).apply {
+                add(current)
+            }
             updateUiState {
                 copy(
                     customData = uiState.customData?.copy(
@@ -518,8 +549,10 @@ class CustomViewModel(
                     )
                 )
             }
+            loading(false)
             setupCollectingEnv()
         } catch (e: Exception) {
+            loading(false)
             updateUiState {
                 copy(
                     repeatSendingDialog = DialogData({
@@ -576,7 +609,6 @@ class CustomViewModel(
 
     private fun disconnect() {
         loading(true)
-        deviceName = ""
         viewModelScope.launch {
             actionJob?.cancelAndJoin()
             getIConnect().disconnect()
@@ -584,6 +616,7 @@ class CustomViewModel(
             loading(false)
             updateUiState {
                 copy(
+                    deviceName = "",
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                     customData = null
                 )

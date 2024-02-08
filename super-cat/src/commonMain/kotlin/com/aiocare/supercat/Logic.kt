@@ -65,7 +65,7 @@ class Logic(private val hostAddress: String) {
 
     fun v5(repeat: Int): List<CalibrationActions> = prepareV5().times(repeat)
 
-    private fun prepareV5(): List<CalibrationActions>{
+    private fun prepareV5(): List<CalibrationActions> {
         return v5.map {
             CalibrationActions(
                 flow = Units.FlowUnit.L_S(it.first),
@@ -76,7 +76,6 @@ class Logic(private val hostAddress: String) {
                         api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
                         api.command(HansCommand.reset())
                     }
-
                 },
                 exhaleAction = {
                     api.command(

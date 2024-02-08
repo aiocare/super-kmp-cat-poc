@@ -30,6 +30,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.aiocare.KeepScreenOn
 import com.aiocare.SimpleButton
+import com.aiocare.custom.RoundedBox
 import com.aiocare.examination.R
 import com.aiocare.poc.calibration.parseTime
 import com.aiocare.util.ButtonVM
@@ -93,6 +94,9 @@ fun SuperCatScreen(viewModel: SuperCatViewModel, navController: NavController) {
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = if (data.numberKeyboardType) KeyboardType.Number else KeyboardType.Text),
                     onValueChange = { data.onValueChanged.invoke(it) })
             }
+        if(viewModel.uiState.deviceName.isNotEmpty())
+            RoundedBox(title = "Connected device", description = viewModel.uiState.deviceName)
+
         val scrollState = rememberScrollState()
         Row {
             SimpleButton(buttonVM = viewModel.uiState.showInitAgain)
