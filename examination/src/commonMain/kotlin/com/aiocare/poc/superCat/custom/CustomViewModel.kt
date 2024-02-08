@@ -34,12 +34,15 @@ import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import kotlinx.datetime.Clock
 
 data class CustomUiState(
@@ -156,23 +159,26 @@ class CustomViewModel(
         actionJob?.cancelAndJoin()
         actionJob = viewModelScope.launch {
             while (true) {
-                try {
-                    HansProxyApi(uiState.url?.value ?: "").apply {
-                        val temp = (command(HansCommand.readTemperature()))
-                        val hum = (command(HansCommand.readHumidity()))
+                withContext(NonCancellable) {
+                    try {
+                        HansProxyApi(uiState.url?.value ?: "").apply {
+                            val temp = (command(HansCommand.readTemperature()))
+                            val hum = (command(HansCommand.readHumidity()))
 
-                        if (temp is Response.TEXT && hum is Response.TEXT)
-                            updateUiState {
-                                copy(customData = customData?.copy(currentEnvData = "temp=${temp.parse()},\nhum=${hum.parse()}"))
-                            }
-                        delay(500)
+                            if (temp is Response.TEXT && hum is Response.TEXT)
+                                updateUiState {
+                                    copy(customData = customData?.copy(currentEnvData = "temp=${temp.parse()},\nhum=${hum.parse()}"))
+                                }
+                            delay(500)
+                        }
+                    } catch (e: Exception) {
+                        updateUiState {
+                            copy(customData = customData?.copy(currentEnvData = "error ${e.message}"))
+                        }
+                        actionJob?.cancelAndJoin()
                     }
-                } catch (e: Exception) {
-                    updateUiState {
-                        copy(customData = customData?.copy(currentEnvData = "error ${e.message}"))
-                    }
-                    actionJob?.cancelAndJoin()
                 }
+                yield()
             }
         }
     }
