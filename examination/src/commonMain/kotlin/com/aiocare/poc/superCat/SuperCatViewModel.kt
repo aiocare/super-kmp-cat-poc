@@ -136,17 +136,29 @@ class SuperCatViewModel(
         updateUiState {
             copy(
                 url = InputData(
-                    "http://192.168.1.217:8080",
+                    InitHolder.address ?: "http://192.168.1.217:8080",
                     "url",
-                    onValueChanged = { v -> updateUiState { copy(url = url?.copy(value = v)) } }),
+                    onValueChanged = { v ->
+                        InitHolder.address = v
+                        updateUiState {
+                            copy(url = url?.copy(value = v))
+                        }
+                    }),
                 note = InputData(
                     "",
                     "note",
-                    onValueChanged = { v -> updateUiState { copy(note = note?.copy(value = v)) } }),
+                    onValueChanged = { v ->
+                        updateUiState { copy(note = note?.copy(value = v)) }
+                    }),
                 hansSerial = InputData(
-                    "112-093",
+                    InitHolder.hansName ?: "112-093",
                     "HansSerial",
-                    onValueChanged = { v -> updateUiState { copy(hansSerial = hansSerial?.copy(value = v)) } },
+                    onValueChanged = { v ->
+                        InitHolder.hansName = v
+                        updateUiState {
+                            copy(hansSerial = hansSerial?.copy(value = v))
+                        }
+                    },
                     numberKeyboardType = true
                 ),
                 showInitAgain = uiState.showInitAgain.copy(onClickAction = {
@@ -169,53 +181,64 @@ class SuperCatViewModel(
 
     private fun prepareInitDialog() {
         updateUiState {
-            copy(initDataDialog = InitDialogData(
-                hansName = listOf("112-121", "112-093", "112-123").map { current ->
-                    ButtonVM(true, current, {
-                        updateUiState {
-                            copy(
-                                hansSerial = uiState.hansSerial?.copy(value = current),
-                                initDataDialog = uiState.initDataDialog?.copy(selectedName = current)
-                            )
-                        }
-                    })
-                },
-                address = listOf(
-                    "192.168.1.203:8080",
-                    "192.168.1.217:8080",
-                    "192.168.1.183:8080"
-                ).map { current ->
-                    ButtonVM(true, current, {
-                        updateUiState {
-                            copy(
-                                initDataDialog = uiState.initDataDialog?.copy(selectedAddress = current),
-                                url = uiState.url?.copy(value = "http://${current}")
-                            )
-                        }
-                    })
-                },
-                operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
-                    ButtonVM(true, it, {
-                        operator = it
+            InitHolder.operator?.let { operator = it }
+            copy(
+                url = InitHolder.address?.let { it1 -> uiState.url?.copy(value = it1) },
+                hansSerial = InitHolder.hansName?.let { it1 -> uiState.hansSerial?.copy(value = it1) },
+                initDataDialog = InitDialogData(
+                    visible = !InitHolder.isFilled(),
+                    selectedAddress = InitHolder.address,
+                    selectedOperator = InitHolder.operator,
+                    selectedName = InitHolder.hansName,
+                    hansName = listOf("112-121", "112-093", "112-123").map { current ->
+                        ButtonVM(true, current, {
+                            InitHolder.hansName = current
+                            updateUiState {
+                                copy(
+                                    hansSerial = uiState.hansSerial?.copy(value = current),
+                                    initDataDialog = uiState.initDataDialog?.copy(selectedName = current)
+                                )
+                            }
+                        })
+                    },
+                    address = listOf(
+                        "192.168.1.203:8080",
+                        "192.168.1.217:8080",
+                        "192.168.1.183:8080"
+                    ).map { current ->
+                        ButtonVM(true, current, {
+                            InitHolder.address = current
+                            updateUiState {
+                                copy(
+                                    initDataDialog = uiState.initDataDialog?.copy(selectedAddress = current),
+                                    url = uiState.url?.copy(value = "http://${current}")
+                                )
+                            }
+                        })
+                    },
+                    operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
+                        ButtonVM(true, it, {
+                            operator = it
+                            InitHolder.operator = it
+                            updateUiState {
+                                copy(
+                                    initDataDialog = uiState.initDataDialog?.copy(
+                                        selectedOperator = operator
+                                    )
+                                )
+                            }
+                        })
+                    },
+                    close = {
                         updateUiState {
                             copy(
                                 initDataDialog = uiState.initDataDialog?.copy(
-                                    selectedOperator = operator
+                                    visible = false
                                 )
                             )
                         }
-                    })
-                },
-                close = {
-                    updateUiState {
-                        copy(
-                            initDataDialog = uiState.initDataDialog?.copy(
-                                visible = false
-                            )
-                        )
                     }
-                }
-            )
+                )
             )
         }
     }
@@ -449,7 +472,8 @@ class SuperCatViewModel(
                 copy(
                     deviceName = "",
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                    after = "", before = EnvironmentalData(), measurementTimer = 0)
+                    after = "", before = EnvironmentalData(), measurementTimer = 0
+                )
             }
         }
     }

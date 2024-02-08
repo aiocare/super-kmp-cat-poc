@@ -12,6 +12,7 @@ import com.aiocare.poc.searchDevice.DeviceItem
 import com.aiocare.poc.superCat.DialogData
 import com.aiocare.poc.superCat.ErrorChecker
 import com.aiocare.poc.superCat.InitDialogData
+import com.aiocare.poc.superCat.InitHolder
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.poc.superCat.RawDataType
 import com.aiocare.poc.superCat.RecordingType
@@ -55,7 +56,7 @@ data class CustomUiState(
     val repeatSendingDialog: DialogData? = null,
     val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
-    val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat"){},
+    val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat") {},
     val deviceName: String = ""
 )
 
@@ -76,7 +77,7 @@ data class CustomData(
     val before: EnvironmentalData? = null,
     val beforeTime: Long? = null,
     val currentEnvData: String = "",
-    val history: MutableList<List<String>> = mutableListOf() ,
+    val history: MutableList<List<String>> = mutableListOf(),
 )
 
 class CustomViewModel(
@@ -112,17 +113,23 @@ class CustomViewModel(
         updateUiState {
             copy(
                 url = InputData(
-                    "http://192.168.1.221:8080",
+                    InitHolder.address?:"http://192.168.1.221:8080",
                     "url",
-                    onValueChanged = { v -> updateUiState { copy(url = url?.copy(value = v)) } }),
+                    onValueChanged = { v ->
+                        InitHolder.address = v
+                        updateUiState { copy(url = url?.copy(value = v)) }
+                    }),
                 note = InputData(
                     "",
                     "note",
                     onValueChanged = { v -> updateUiState { copy(note = note?.copy(value = v)) } }),
                 hansSerial = InputData(
-                    "112-093",
+                    InitHolder.hansName?:"112-093",
                     "HansSerial",
-                    onValueChanged = { v -> updateUiState { copy(hansSerial = hansSerial?.copy(value = v)) } },
+                    onValueChanged = { v -> updateUiState {
+                        InitHolder.hansName = v
+                        copy(hansSerial = hansSerial?.copy(value = v))
+                    } },
                     numberKeyboardType = true
                 ),
                 initDialogBtn = uiState.initDialogBtn.copy(onClickAction = {
@@ -171,54 +178,65 @@ class CustomViewModel(
     }
 
     private fun prepareInitDialog() {
+        InitHolder.operator?.let { operator = it }
         updateUiState {
-            copy(initDataDialog = InitDialogData(
-                hansName = listOf("112-121", "112-093", "112-123").map { current ->
-                    ButtonVM(true, current, {
-                        updateUiState {
-                            copy(
-                                hansSerial = uiState.hansSerial?.copy(value = current),
-                                initDataDialog = uiState.initDataDialog?.copy(selectedName = current)
-                            )
-                        }
-                    })
-                },
-                address = listOf(
-                    "192.168.1.203:8080",
-                    "192.168.1.217:8080",
-                    "192.168.1.183:8080"
-                ).map { current ->
-                    ButtonVM(true, current, {
-                        updateUiState {
-                            copy(
-                                initDataDialog = uiState.initDataDialog?.copy(selectedAddress = current),
-                                url = uiState.url?.copy(value = "http://${current}")
-                            )
-                        }
-                    })
-                },
-                operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
-                    ButtonVM(true, it, {
-                        operator = it
+            copy(
+                url = InitHolder.address?.let { it1 -> uiState.url?.copy(value = it1) },
+                hansSerial = InitHolder.hansName?.let { it1 -> uiState.hansSerial?.copy(value = it1) },
+                initDataDialog = InitDialogData(
+                    visible = !InitHolder.isFilled(),
+                    selectedAddress = InitHolder.address,
+                    selectedOperator = InitHolder.operator,
+                    selectedName = InitHolder.hansName,
+                    hansName = listOf("112-121", "112-093", "112-123").map { current ->
+                        ButtonVM(true, current, {
+                            InitHolder.hansName = current
+                            updateUiState {
+                                copy(
+                                    hansSerial = uiState.hansSerial?.copy(value = current),
+                                    initDataDialog = uiState.initDataDialog?.copy(selectedName = current)
+                                )
+                            }
+                        })
+                    },
+                    address = listOf(
+                        "192.168.1.203:8080",
+                        "192.168.1.217:8080",
+                        "192.168.1.183:8080"
+                    ).map { current ->
+                        ButtonVM(true, current, {
+                            InitHolder.address = current
+                            updateUiState {
+                                copy(
+                                    initDataDialog = uiState.initDataDialog?.copy(selectedAddress = current),
+                                    url = uiState.url?.copy(value = "http://${current}")
+                                )
+                            }
+                        })
+                    },
+                    operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
+                        ButtonVM(true, it, {
+                            operator = it
+                            InitHolder.operator = it
+                            updateUiState {
+                                copy(
+                                    initDataDialog = uiState.initDataDialog?.copy(
+                                        selectedOperator = operator
+                                    )
+                                )
+                            }
+                        })
+                    },
+                    close = {
                         updateUiState {
                             copy(
                                 initDataDialog = uiState.initDataDialog?.copy(
-                                    selectedOperator = operator
+                                    visible = false
                                 )
                             )
                         }
-                    })
-                },
-                close = {
-                    updateUiState {
-                        copy(
-                            initDataDialog = uiState.initDataDialog?.copy(
-                                visible = false
-                            )
-                        )
                     }
-                }
-            )
+                )
             )
         }
     }
@@ -513,10 +531,10 @@ class CustomViewModel(
             loading(true)
             val response = Api().postNewRawData(request)
             updateProgress(response)
-            val current = uiState.customData?.results?.map { it.name }?: listOf()
-           val added =  (uiState.customData?.history?: mutableListOf()).apply {
-               add(current)
-           }
+            val current = uiState.customData?.results?.map { it.name } ?: listOf()
+            val added = (uiState.customData?.history ?: mutableListOf()).apply {
+                add(current)
+            }
             updateUiState {
                 copy(
                     customData = uiState.customData?.copy(

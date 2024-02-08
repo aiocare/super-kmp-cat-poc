@@ -6,11 +6,11 @@ sealed class Response {
         object NOT_RECOGNIZED : NoInteractive("?")
     }
 
-    class TEXT(val response: String) : Response(){
+    class TEXT(val response: String) : Response() {
 
-        fun parse(): String{
+        fun parse(): String {
             val parts = response.split(",")
-            return "${parts[parts.size-2]}${parts.first()}"
+            return "${parts[parts.size - 2]}${parts.first()}"
         }
     }
 }

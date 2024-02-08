@@ -35,7 +35,7 @@ class HansCommand private constructor(private val rawCommand: String) {
         fun waveform(
             waveFormName: String
         ): HansCommand {
-            return HansCommand(waveFormName.replace("/","@").removeSuffix(".fvw"))
+            return HansCommand(waveFormName.replace("/", "@").removeSuffix(".fvw"))
         }
 
         fun waveformData() = rawCommand("SendSpirometry")
