@@ -233,6 +233,7 @@ class SuperCatViewModel(
                     updateUiState {
                         copy(
                             deviceName = "",
+                            disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                             after = "", before = EnvironmentalData(), measurementTimer = 0
                         )
                     }
@@ -447,6 +448,7 @@ class SuperCatViewModel(
             updateUiState {
                 copy(
                     deviceName = "",
+                    disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                     after = "", before = EnvironmentalData(), measurementTimer = 0)
             }
         }
