@@ -144,7 +144,7 @@ class Logic(private val hostAddress: String) {
                                 else -> "bad response"
                             }
                         wfd = WaveformData(
-                            name = it.name ?: "no name",
+                            name = NameHelper.parse(it.name?: "no name"),
                             rawSignal = recordedRawSignal,
                             hansCalculatedValues = sendSpirometryResult,
                             timestamp = getTime()

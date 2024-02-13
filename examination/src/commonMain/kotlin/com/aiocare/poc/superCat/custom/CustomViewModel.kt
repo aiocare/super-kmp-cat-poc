@@ -25,6 +25,7 @@ import com.aiocare.sdk.services.readFlow
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
 import com.aiocare.sdk.services.readTemperature
+import com.aiocare.supercat.NameHelper
 import com.aiocare.supercat.PhoneInfo
 import com.aiocare.supercat.api.Dir
 import com.aiocare.supercat.api.HansCommand
@@ -519,7 +520,7 @@ class CustomViewModel(
             steadyFlowRawData = null,
             waveformRawData = uiState.customData!!.results.map {
                 WaveformData(
-                    it.name,
+                    NameHelper.parse(it.name),
                     it.waveFormRawSignal,
                     "${it.sendSpirometryResult}\n${(it.humidity as Response.TEXT).response}\n${(it.temperature as Response.TEXT).response}",
                     it.timestamp
