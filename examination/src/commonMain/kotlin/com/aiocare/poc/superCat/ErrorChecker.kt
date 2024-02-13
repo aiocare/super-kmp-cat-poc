@@ -4,7 +4,7 @@ object ErrorChecker {
 
     fun checkZeroFlowAndThrow(zeroFlowList: List<Int>){
         when(val avg = zeroFlowList.average()){
-            in 0.0..50.0 ->  {}
+            in -5.0..50.0 ->  {}
             else -> {
                 throw SequenceException.ZeroFlowException("avg of zeroFlow= $avg")
             }
