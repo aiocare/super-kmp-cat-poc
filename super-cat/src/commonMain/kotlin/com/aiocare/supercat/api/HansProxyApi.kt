@@ -10,7 +10,12 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 
-class HansProxyApi(private val hostAddress: String) {
+enum class TimeoutTypes(val value: Long){
+    NORMAL(25000),
+    LONG(60000),
+}
+
+class HansProxyApi(private val hostAddress: String, timeoutTypes: TimeoutTypes) {
 
     private val httpClient = HttpClient {
         install(Logging) {
@@ -22,8 +27,8 @@ class HansProxyApi(private val hostAddress: String) {
             level = LogLevel.ALL
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 25000
-            connectTimeoutMillis = 25000
+            requestTimeoutMillis = timeoutTypes.value
+            connectTimeoutMillis = timeoutTypes.value
         }
     }
 

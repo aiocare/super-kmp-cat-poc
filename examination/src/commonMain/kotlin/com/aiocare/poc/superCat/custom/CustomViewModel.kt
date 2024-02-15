@@ -31,6 +31,7 @@ import com.aiocare.supercat.api.Dir
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.supercat.api.Response
+import com.aiocare.supercat.api.TimeoutTypes
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
@@ -162,7 +163,7 @@ class CustomViewModel(
             while (true) {
                 withContext(NonCancellable) {
                     try {
-                        HansProxyApi(uiState.url?.value ?: "").apply {
+                        HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL).apply {
                             val temp = (command(HansCommand.readTemperature()))
                             val hum = (command(HansCommand.readHumidity()))
 
@@ -390,7 +391,7 @@ class CustomViewModel(
 
     private suspend fun processSequence(sequence: String): SequenceResultData {
         updateProgress(sequence ?: "")
-        val api = HansProxyApi(uiState.url?.value ?: "")
+        val api = HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL)
         api.waveformLoad(HansCommand.waveform(sequence))
         api.command(HansCommand.reset())
 
@@ -443,16 +444,16 @@ class CustomViewModel(
                                 loading(true)
                                 updateProgress("start execute without recording, load")
                                 HansProxyApi(
-                                    uiState.url?.value ?: ""
+                                    uiState.url?.value ?: "", TimeoutTypes.NORMAL
                                 ).waveformLoad(
                                     HansCommand.waveform(
                                         uiState.customData?.selectedWaveForm ?: ""
                                     )
                                 )
                                 updateProgress("start execute without recording, reset")
-                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
+                                HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.LONG).command(HansCommand.reset())
                                 updateProgress("start execute without recording, run")
-                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.run())
+                                HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL).command(HansCommand.run())
                                 updateProgress("finish execute without recording")
                                 setupCollectingEnv()
                                 loading(false)
@@ -467,7 +468,7 @@ class CustomViewModel(
                             try {
                                 actionJob?.cancelAndJoin()
                                 updateProgress("reseting...")
-                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
+                                HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.LONG).command(HansCommand.reset())
                                 updateProgress("reseting finished")
                                 setupCollectingEnv()
                             } catch (e: Exception) {
@@ -576,7 +577,7 @@ class CustomViewModel(
     private fun selectSequence() {
         viewModelScope.launch {
             try {
-                val sequences = HansProxyApi(uiState.url?.value ?: "").getAvailableSequences()
+                val sequences = HansProxyApi(uiState.url?.value ?: "",TimeoutTypes.NORMAL).getAvailableSequences()
                 updateUiState {
                     copy(
                         selectData = SelectData(sequences, { result ->
