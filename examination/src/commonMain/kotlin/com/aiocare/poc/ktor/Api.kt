@@ -58,7 +58,8 @@ class Api {
             contentType(ContentType.Application.Json)
             setBody(postData)
         }.let {
-            "${it.status} --> ${it.responseTime}"
+            "${it.status} --> ${it.responseTime} --> ${it.bodyAsText()}"
+
         }
     }
 

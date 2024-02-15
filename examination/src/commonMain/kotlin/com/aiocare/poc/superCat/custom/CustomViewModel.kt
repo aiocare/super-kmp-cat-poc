@@ -15,7 +15,7 @@ import com.aiocare.poc.superCat.InitDialogData
 import com.aiocare.poc.superCat.InitHolder
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.poc.superCat.RawDataType
-import com.aiocare.poc.superCat.RecordingType
+import com.aiocare.poc.superCat.RecordingTypeHelper
 import com.aiocare.sdk.IAioCareDevice
 import com.aiocare.sdk.IAioCareScan
 import com.aiocare.sdk.connecting.getIConnect
@@ -527,12 +527,13 @@ class CustomViewModel(
                     it.timestamp
                 )
             },
-            type = RecordingType.CUSTOM_SEQUENCE.name,
+            type = RecordingTypeHelper.findTypeBasedOnNames(uiState.customData!!.results.map { it.name }).name,
             rawDataType = RawDataType.WAVEFORM.name,
             notes = uiState.note?.value ?: ""
         )
         trySendToApi(request)
     }
+
 
     private suspend fun trySendToApi(request: Api.PostData) {
         try {
