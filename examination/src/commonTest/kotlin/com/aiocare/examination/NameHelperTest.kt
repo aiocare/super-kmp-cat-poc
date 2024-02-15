@@ -12,6 +12,8 @@ class NameHelperTest {
         assertEquals("aaa", NameHelper.parse("aaa"))
         assertEquals("aaa", NameHelper.parse("bb@aaa"))
         assertEquals("c", NameHelper.parse("bb@aaa@c"))
+        assertEquals("c", NameHelper.parse("bb@aaa/c"))
+        assertEquals("c", NameHelper.parse("bb/aaa@c"))
         assertNotEquals("aaa", NameHelper.parse("bb@aaa@c"))
     }
 }
