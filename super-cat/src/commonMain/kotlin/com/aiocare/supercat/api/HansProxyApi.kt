@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 
 enum class TimeoutTypes(val value: Long){
     NORMAL(25000),
-    LONG(60000),
+    LONG(120000),
 }
 
 class HansProxyApi(private val hostAddress: String, timeoutTypes: TimeoutTypes) {
