@@ -159,9 +159,13 @@ class CustomViewModel(
         viewModelScope.launch { setupCollectingEnv() }
     }
 
-    private suspend fun setupCollectingEnv() {
+    private suspend fun safeCancelJob(){
         if(actionJob!=null && ! actionJob!!.isCancelled)
             actionJob?.cancelAndJoin()
+    }
+
+    private suspend fun setupCollectingEnv() {
+        safeCancelJob()
         actionJob = viewModelScope.launch {
             while (true) {
                 withContext(NonCancellable) {
@@ -258,13 +262,12 @@ class CustomViewModel(
         viewModelScope.launch {
             getIConnect().getConnectedFlow().collect {
                 if (!it) {
-                    actionJob?.cancelAndJoin()
+                    safeCancelJob()
                     device = null
                     startSearching()
                     updateUiState {
                         copy(
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                            customData = null,
                             deviceName = ""
                         )
                     }
@@ -298,7 +301,7 @@ class CustomViewModel(
             viewModelScope.launch {
                 try {
                     loading(true)
-                    actionJob?.cancelAndJoin()
+                    safeCancelJob()
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
@@ -445,7 +448,7 @@ class CustomViewModel(
                     },
                     executeWithoutRecordingBtn = ButtonVM(true, "run waveform without recording") {
                         viewModelScope.launch {
-                            actionJob?.cancelAndJoin()
+                            safeCancelJob()
                             try {
                                 loading(true)
                                 updateProgress("start execute without recording, load")
@@ -472,7 +475,7 @@ class CustomViewModel(
                     resetBtn = ButtonVM(true, "hans Reset") {
                         viewModelScope.launch {
                             try {
-                                actionJob?.cancelAndJoin()
+                                safeCancelJob()
                                 updateProgress("reseting...")
                                 HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.LONG).command(HansCommand.reset())
                                 updateProgress("reseting finished")
@@ -484,7 +487,7 @@ class CustomViewModel(
                     },
                     sendBtn = ButtonVM(true, "save results") {
                         viewModelScope.launch {
-                            actionJob?.cancelAndJoin()
+                            safeCancelJob()
                             afterSendData()
                         }
                     }
@@ -619,7 +622,7 @@ class CustomViewModel(
     private fun disconnect() {
         loading(true)
         viewModelScope.launch {
-            actionJob?.cancelAndJoin()
+            safeCancelJob()
             getIConnect().disconnect()
             startSearching()
             loading(false)
@@ -627,7 +630,6 @@ class CustomViewModel(
                 copy(
                     deviceName = "",
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                    customData = null
                 )
             }
         }
