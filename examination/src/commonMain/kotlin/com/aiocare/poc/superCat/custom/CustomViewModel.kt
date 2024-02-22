@@ -123,6 +123,7 @@ class CustomViewModel(
                     onValueChanged = { v ->
                         InitHolder.address = v
                         updateUiState { copy(url = url?.copy(value = v)) }
+                        viewModelScope.launch { setupCollectingEnv() }
                     }),
                 note = InputData(
                     "",
@@ -155,10 +156,12 @@ class CustomViewModel(
                 })
             )
         }
+        viewModelScope.launch { setupCollectingEnv() }
     }
 
     private suspend fun setupCollectingEnv() {
-        actionJob?.cancelAndJoin()
+        if(actionJob!=null && ! actionJob!!.isCancelled)
+            actionJob?.cancelAndJoin()
         actionJob = viewModelScope.launch {
             while (true) {
                 withContext(NonCancellable) {
@@ -220,6 +223,7 @@ class CustomViewModel(
                                     url = uiState.url?.copy(value = "http://${current}")
                                 )
                             }
+                            viewModelScope.launch { setupCollectingEnv() }
                         })
                     },
                     operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
@@ -247,6 +251,7 @@ class CustomViewModel(
                 )
             )
         }
+        viewModelScope.launch { setupCollectingEnv() }
     }
 
     private fun startObservingState() {
@@ -284,6 +289,7 @@ class CustomViewModel(
                     })
             }
             loading(false)
+            viewModelScope.launch { setupCollectingEnv() }
         }
     }
 
