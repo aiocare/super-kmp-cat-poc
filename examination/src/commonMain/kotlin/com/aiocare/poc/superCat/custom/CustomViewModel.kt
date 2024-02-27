@@ -424,7 +424,7 @@ class CustomViewModel(
                 }
             }
             updateProgress("start waveform")
-            api.command(HansCommand.rawCommand("Run"))
+            api.command(HansCommand.run())
             recordJob?.cancelAndJoin()
             val sendSpirometryResult =
                 when (val res = api.command(HansCommand.waveformData())) {
@@ -460,16 +460,6 @@ class CustomViewModel(
                             try {
                                 loading(true)
                                 updateBattery()
-                                updateProgress("start execute without recording, load")
-                                HansProxyApi(
-                                    uiState.url?.value ?: "", TimeoutTypes.NORMAL
-                                ).waveformLoad(
-                                    HansCommand.waveform(
-                                        uiState.customData?.selectedWaveForm ?: ""
-                                    )
-                                )
-                                updateProgress("start execute without recording, reset")
-                                HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.LONG).command(HansCommand.reset())
                                 updateProgress("start execute without recording, run")
                                 HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL).command(HansCommand.run())
                                 updateProgress("finish execute without recording")
@@ -600,15 +590,33 @@ class CustomViewModel(
                 updateUiState {
                     copy(
                         selectData = SelectData(sequences, { result ->
-                            updateUiState {
-                                copy(
-                                    selectData = null,
-                                    customData = uiState.customData?.copy(
-                                        selectedWaveForm = result.removePrefix(
-                                            "/waveforms/"
-                                        )
+                            viewModelScope.launch {
+                                safeCancelJob()
+                                try {
+                                    HansProxyApi(
+                                        uiState.url?.value ?: "", TimeoutTypes.NORMAL
+                                    ).waveformLoad(
+                                        HansCommand.waveform(result.removePrefix("/waveforms/"))
                                     )
-                                )
+
+                                    updateUiState {
+                                        copy(
+                                            selectData = null,
+                                            customData = uiState.customData?.copy(
+                                                selectedWaveForm = result.removePrefix(
+                                                    "/waveforms/"
+                                                )
+                                            )
+                                        )
+                                    }
+                                }catch (e: Exception){
+                                    updateUiState {
+                                        copy(
+                                            selectData = null,
+                                        )
+                                    }
+                                    updateProgress("error during setting waveform: ${e.message}")
+                                }
                             }
                         })
                     )
