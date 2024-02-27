@@ -94,9 +94,8 @@ fun SuperCatScreen(viewModel: SuperCatViewModel, navController: NavController) {
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = if (data.numberKeyboardType) KeyboardType.Number else KeyboardType.Text),
                     onValueChange = { data.onValueChanged.invoke(it) })
             }
-        if(viewModel.uiState.deviceName.isNotEmpty())
-            RoundedBox(title = "Connected device", description = viewModel.uiState.deviceName)
-
+        if(viewModel.uiState.deviceData != null)
+            RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name} battery =${viewModel.uiState.deviceData?.battery}%")
         val scrollState = rememberScrollState()
         Row {
             SimpleButton(buttonVM = viewModel.uiState.showInitAgain)

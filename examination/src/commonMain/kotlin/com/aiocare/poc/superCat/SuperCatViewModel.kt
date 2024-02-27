@@ -11,6 +11,7 @@ import com.aiocare.poc.calibration.EnvironmentalData
 import com.aiocare.poc.calibration.GraphObjects
 import com.aiocare.poc.ktor.Api
 import com.aiocare.poc.searchDevice.DeviceItem
+import com.aiocare.poc.superCat.custom.DeviceData
 import com.aiocare.sdk.IAioCareDevice
 import com.aiocare.sdk.IAioCareScan
 import com.aiocare.sdk.connecting.getIConnect
@@ -67,7 +68,7 @@ data class SuperCatUiState(
     val zeroFlowDialog: ZeroFlowDialogData? = null,
     val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {},
     val navCustomBtn: ButtonVM = ButtonVM(false, "Nav to custom") {},
-    val deviceName: String = "",
+    val deviceData: DeviceData? = null
 )
 
 data class ZeroFlowDialogData(val message: String?, val close: () -> Unit)
@@ -255,7 +256,7 @@ class SuperCatViewModel(
                     startSearching()
                     updateUiState {
                         copy(
-                            deviceName = "",
+                            deviceData = null,
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                             after = "", before = EnvironmentalData(), measurementTimer = 0
                         )
@@ -271,9 +272,10 @@ class SuperCatViewModel(
             device = getIConnectMobile().connectMobile(this, scan)
             scanJob?.cancelAndJoin()
             startObservingState()
+            val battery = device?.readBattery()?:0
             updateUiState {
                 copy(
-                    deviceName = scan.getName(),
+                    deviceData = DeviceData(scan.getName(), battery),
                     devices = listOf(),
                     examBtn = examBtn.copy(
                         visible = true,
@@ -470,7 +472,7 @@ class SuperCatViewModel(
             startSearching()
             updateUiState {
                 copy(
-                    deviceName = "",
+                    deviceData = null,
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                     after = "", before = EnvironmentalData(), measurementTimer = 0
                 )
@@ -528,7 +530,7 @@ class SuperCatViewModel(
 
     private fun updateSequenceName(name: String) {
         updateUiState {
-            copy(currentSequence = "${name} ${deviceName}")
+            copy(currentSequence = "${name} ${deviceData?.name}")
         }
     }
 
@@ -632,7 +634,7 @@ class SuperCatViewModel(
                 hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
                 hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
                 appVersion = VersionHolder.version,
-                spirometerDeviceSerial = uiState.deviceName,
+                spirometerDeviceSerial = uiState.deviceData?.name?:"",
                 operator = operator,
                 date = calculateDate()
             ),
@@ -714,6 +716,7 @@ class SuperCatViewModel(
 
     private suspend fun loadEnv() {
         updateLoader(true)
+        updateBattery()
         updateProgress("loading before....")
         var temperature: Float? = null
         var pressure: Float? = null
@@ -800,5 +803,13 @@ class SuperCatViewModel(
 
     fun playingStarted() {
         updateUiState { copy(playMusicSuccess = false, playMusicFail = false) }
+    }
+
+    private suspend fun updateBattery(){
+        device?.readBattery()?.let {  bat ->
+            updateUiState {
+                copy(deviceData = deviceData?.copy(battery = bat))
+            }
+        }
     }
 }

@@ -73,8 +73,8 @@ fun CustomScreen(
                     )
                 }
             }
-        if(viewModel.uiState.deviceName.isNotEmpty())
-            RoundedBox(title = "Connected device", description = viewModel.uiState.deviceName)
+        if(viewModel.uiState.deviceData != null)
+            RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name} battery =${viewModel.uiState.deviceData?.battery}%")
         listOfNotNull(
             viewModel.uiState.url,
             viewModel.uiState.hansSerial,
@@ -93,7 +93,7 @@ fun CustomScreen(
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.initDialogBtn)
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.navSuperCatBtn)
         }
-        CustomDataView(viewModel.uiState.customData, viewModel.uiState.deviceName.isNotEmpty(),
+        CustomDataView(viewModel.uiState.customData, viewModel.uiState.deviceData != null,
             viewModel.uiState.customData?.selectedWaveForm?.isNotEmpty()==true)
     }
     viewModel.uiState.selectData?.let { selectedData ->

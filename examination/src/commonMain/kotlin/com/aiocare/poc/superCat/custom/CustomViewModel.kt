@@ -21,6 +21,7 @@ import com.aiocare.sdk.IAioCareScan
 import com.aiocare.sdk.connecting.getIConnect
 import com.aiocare.sdk.connecting.getIConnectMobile
 import com.aiocare.sdk.scan.getIScan
+import com.aiocare.sdk.services.readBattery
 import com.aiocare.sdk.services.readFlow
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
@@ -62,8 +63,10 @@ data class CustomUiState(
     val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
     val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat") {},
-    val deviceName: String = ""
+    val deviceData: DeviceData? = null
 )
+
+data class DeviceData(val name: String, val battery: Int)
 
 data class ErrorData(val title: String, val description: String, val onClose: () -> Unit)
 
@@ -268,7 +271,7 @@ class CustomViewModel(
                     updateUiState {
                         copy(
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                            deviceName = ""
+                            deviceData = null
                         )
                     }
                 }
@@ -283,9 +286,10 @@ class CustomViewModel(
             scanJob?.cancelAndJoin()
             startObservingState()
             setupCustomData()
+            val battery = device?.readBattery()?:0
             updateUiState {
                 copy(
-                    deviceName = scan.getName(),
+                    deviceData = DeviceData(scan.getName(), battery),
                     devices = listOf(),
                     disconnectBtn = ButtonVM(true, text = "disconnected") {
                         disconnect()
@@ -302,6 +306,7 @@ class CustomViewModel(
                 try {
                     loading(true)
                     safeCancelJob()
+                    updateBattery()
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
@@ -454,6 +459,7 @@ class CustomViewModel(
                             safeCancelJob()
                             try {
                                 loading(true)
+                                updateBattery()
                                 updateProgress("start execute without recording, load")
                                 HansProxyApi(
                                     uiState.url?.value ?: "", TimeoutTypes.NORMAL
@@ -513,7 +519,7 @@ class CustomViewModel(
                 hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
                 hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
                 appVersion = VersionHolder.version,
-                spirometerDeviceSerial = uiState.deviceName,
+                spirometerDeviceSerial = uiState.deviceData?.name?:"",
                 operator = operator,
                 date = calculateDate()
             ),
@@ -622,6 +628,14 @@ class CustomViewModel(
         }
     }
 
+    private suspend fun updateBattery(){
+        device?.readBattery()?.let {  bat ->
+            updateUiState {
+                copy(deviceData = deviceData?.copy(battery = bat))
+            }
+        }
+    }
+
     private fun disconnect() {
         loading(true)
         viewModelScope.launch {
@@ -631,7 +645,7 @@ class CustomViewModel(
             loading(false)
             updateUiState {
                 copy(
-                    deviceName = "",
+                    deviceData = null,
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                 )
             }
