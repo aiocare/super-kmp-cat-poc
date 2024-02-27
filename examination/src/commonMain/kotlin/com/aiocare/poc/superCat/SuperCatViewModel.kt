@@ -191,7 +191,7 @@ class SuperCatViewModel(
                     selectedOperator = InitHolder.operator,
                     selectedName = InitHolder.hansName,
                     hansName = listOf("112-121", "112-093", "112-123").map { current ->
-                        ButtonVM(true, current, {
+                        ButtonVM(true, current, true, {
                             InitHolder.hansName = current
                             updateUiState {
                                 copy(
@@ -206,7 +206,7 @@ class SuperCatViewModel(
                         "192.168.1.217:8080",
                         "192.168.1.183:8080"
                     ).map { current ->
-                        ButtonVM(true, current, {
+                        ButtonVM(true, current, true, {
                             InitHolder.address = current
                             updateUiState {
                                 copy(
@@ -217,7 +217,7 @@ class SuperCatViewModel(
                         })
                     },
                     operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
-                        ButtonVM(true, it, {
+                        ButtonVM(true, it, true, {
                             operator = it
                             InitHolder.operator = it
                             updateUiState {

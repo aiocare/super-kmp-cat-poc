@@ -204,7 +204,7 @@ class CustomViewModel(
                     selectedOperator = InitHolder.operator,
                     selectedName = InitHolder.hansName,
                     hansName = listOf("112-121", "112-093", "112-123").map { current ->
-                        ButtonVM(true, current, {
+                        ButtonVM(true, current, true, {
                             InitHolder.hansName = current
                             updateUiState {
                                 copy(
@@ -219,7 +219,7 @@ class CustomViewModel(
                         "192.168.1.217:8080",
                         "192.168.1.183:8080"
                     ).map { current ->
-                        ButtonVM(true, current, {
+                        ButtonVM(true, current, true, {
                             InitHolder.address = current
                             updateUiState {
                                 copy(
@@ -231,7 +231,7 @@ class CustomViewModel(
                         })
                     },
                     operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
-                        ButtonVM(true, it, {
+                        ButtonVM(true, it, true, {
                             operator = it
                             InitHolder.operator = it
                             updateUiState {
@@ -439,6 +439,7 @@ class CustomViewModel(
     }
 
     private fun setupCustomData() {
+        if(uiState.customData==null)
         updateUiState {
             copy(
                 customData = CustomData(

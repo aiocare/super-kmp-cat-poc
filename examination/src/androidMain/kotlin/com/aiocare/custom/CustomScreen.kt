@@ -93,7 +93,7 @@ fun CustomScreen(
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.initDialogBtn)
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.navSuperCatBtn)
         }
-        CustomDataView(viewModel.uiState.customData)
+        CustomDataView(viewModel.uiState.customData, viewModel.uiState.deviceName.isNotEmpty())
     }
     viewModel.uiState.selectData?.let { selectedData ->
         Box(modifier = Modifier
@@ -141,6 +141,7 @@ fun ErrorDataDialog(errorData: ErrorData?) {
 fun SimpleButtonWithoutMargin(buttonVM: ButtonVM){
     if (buttonVM.visible)
         Button(
+            enabled = buttonVM.enabled,
             onClick = { buttonVM.onClickAction.invoke() },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.padding(start = 4.dp, end = 4.dp)
@@ -150,7 +151,7 @@ fun SimpleButtonWithoutMargin(buttonVM: ButtonVM){
 }
 
 @Composable
-fun CustomDataView(customData: CustomData?) {
+fun CustomDataView(customData: CustomData?, enabled: Boolean) {
     customData?.let {
         Column {
             sequenceOf(
@@ -163,7 +164,7 @@ fun CustomDataView(customData: CustomData?) {
             ).filterNotNull().chunked(2).forEach {
                 Row {
                     it.forEach {
-                        SimpleButtonWithoutMargin(buttonVM = it)
+                        SimpleButtonWithoutMargin(buttonVM = it.copy(enabled = enabled))
                     }
                 }
             }
