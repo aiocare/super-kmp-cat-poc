@@ -418,6 +418,7 @@ class CustomViewModel(
                     }
                 }
             }
+            updateProgress("start waveform")
             api.command(HansCommand.rawCommand("Run"))
             recordJob?.cancelAndJoin()
             val sendSpirometryResult =
@@ -425,6 +426,7 @@ class CustomViewModel(
                     is Response.TEXT -> res.response
                     else -> "bad response"
                 }
+            updateProgress("finished waveform")
             return@coroutineScope SequenceResultData(
                 sequence,
                 sendSpirometryResult,
