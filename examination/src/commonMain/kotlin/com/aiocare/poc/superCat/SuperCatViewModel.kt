@@ -191,7 +191,7 @@ class SuperCatViewModel(
                     selectedAddress = InitHolder.address,
                     selectedOperator = InitHolder.operator,
                     selectedName = InitHolder.hansName,
-                    hansName = listOf("112-121", "112-093", "112-123").map { current ->
+                    hansName = listOf("112-121", "112-093", "112-123", "112-131").map { current ->
                         ButtonVM(true, current, true, {
                             InitHolder.hansName = current
                             updateUiState {
