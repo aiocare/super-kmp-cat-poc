@@ -8,7 +8,6 @@ import com.aiocare.bluetooth.deviceProvider.DeviceProvider
 import com.aiocare.bluetooth.di.inject
 //import com.aiocare.model.SteadyFlowData
 //import com.aiocare.model.WaveformData
-import com.aiocare.models.SteadyFlowData
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
@@ -31,6 +30,7 @@ import com.aiocare.poc.superCat.custom.DeviceData
 import com.aiocare.supercat.CalibrationSequenceType
 import com.aiocare.supercat.Logic
 import com.aiocare.supercat.PhoneInfo
+import com.aiocare.supercat.SteadyFlowData
 import com.aiocare.supercat.WaveformData
 import com.aiocare.supercat.pefA
 import com.aiocare.supercat.pefB

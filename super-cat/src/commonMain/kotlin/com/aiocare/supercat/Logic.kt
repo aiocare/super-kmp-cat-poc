@@ -2,7 +2,6 @@ package com.aiocare.supercat
 
 import com.aiocare.bluetooth.device.AioCareDevice
 import com.aiocare.list.toIntList
-import com.aiocare.models.SteadyFlowData
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.supercat.api.Response
@@ -12,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
 class Logic(private val hostAddress: String) {
 
@@ -179,6 +179,7 @@ class Logic(private val hostAddress: String) {
                     var recordJob: Job?
                     log("before ${it.flow.value}")
                     it.beforeAction.invoke()
+                    val exhaleStartTime = Clock.System.now().toEpochMilliseconds()
                     coroutineScope {
                         recordJob = launch {
                             device.readFlowCommand.values.collect {
@@ -190,6 +191,7 @@ class Logic(private val hostAddress: String) {
                         log("exhale ${it.flow.value}")
                         it.exhaleAction.invoke()
                         recordJob?.cancelAndJoin()
+                        val exhaleFinishTime = Clock.System.now().toEpochMilliseconds()
                         coroutineScope {
                             recordJob = launch {
                                 device.readFlowCommand.values.collect {
@@ -201,11 +203,16 @@ class Logic(private val hostAddress: String) {
                             log("inhale ${it.flow.value}")
                             it.inhaleAction.invoke()
                             recordJob?.cancelAndJoin()
+                            val inhaleFinishTime = Clock.System.now().toEpochMilliseconds()
                             sfd = SteadyFlowData(
-                                it.flow.value,
-                                it.volume.value,
-                                recordedRawSignal.toIntList(),
-                                recordedInhaleRawSignal.toIntList()
+                                flow = it.flow.value,
+                                volume = it.volume.value,
+                                exhaleRawSignal = recordedRawSignal.toIntList(),
+                                inhaleRawSignal = recordedInhaleRawSignal.toIntList(),
+                                exhaleRawSignalTime =exhaleFinishTime - exhaleStartTime,
+                                exhaleRawSignalCount = recordedRawSignal.size,
+                                inhaleRawSignalTime =inhaleFinishTime - exhaleFinishTime,
+                                inhaleRawSignalCount = recordedInhaleRawSignal.size
                             )
                         }
                     }

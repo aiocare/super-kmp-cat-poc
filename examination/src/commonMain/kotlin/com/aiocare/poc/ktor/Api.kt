@@ -1,6 +1,6 @@
 package com.aiocare.poc.ktor
 
-import com.aiocare.models.SteadyFlowData
+import com.aiocare.supercat.SteadyFlowData
 import com.aiocare.supercat.WaveformData
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
