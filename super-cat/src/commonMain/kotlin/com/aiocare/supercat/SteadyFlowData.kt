@@ -1,6 +1,5 @@
 package com.aiocare.supercat
 
-import com.aiocare.list.IntList
 import com.aiocare.list.ToArray
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -11,8 +10,8 @@ import kotlin.js.JsExport
 data class SteadyFlowData(
     val flow: Double,
     val volume: Double,
-    val exhaleRawSignal: IntList,
-    val inhaleRawSignal: IntList,
+    val exhaleRawSignal: List<Int>,
+    val inhaleRawSignal: List<Int>,
     val exhaleRawSignalCount: Int,
     val exhaleRawSignalTime: Long,
     val inhaleRawSignalCount: Int,
