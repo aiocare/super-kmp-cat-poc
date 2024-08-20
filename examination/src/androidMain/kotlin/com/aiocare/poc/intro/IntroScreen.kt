@@ -13,7 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.aiocare.SimpleButton
-import com.aiocare.sdk.permission.Permission
+import com.aiocare.bluetooth.PlatformPermission
 
 
 @Composable
@@ -24,7 +24,7 @@ fun IntroScreen(
     var inited by remember { mutableStateOf(false) }
 
     if (!inited) {
-        viewModel.init(Permission(LocalContext.current)) {
+        viewModel.init(PlatformPermission(LocalContext.current)) {
             navController.navigate(it)
         }
         inited = true

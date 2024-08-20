@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.aiocare.SimpleButton
-import com.aiocare.cat.Graph
 
 @Composable
 fun HansInputScreen(
@@ -41,7 +40,6 @@ fun HansInputScreen(
                 buttonVM = viewModel.uiState.refreshButtonVM
             )
             viewModel.uiState.details?.let { Text(text = it) }
-            Graph(graphItems = viewModel.uiState.indexedInputData)
 
         }
         if (viewModel.uiState.refreshing)

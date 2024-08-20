@@ -1,10 +1,11 @@
 package com.aiocare.poc.intro
 
 import com.aiocare.Screens
+import com.aiocare.bluetooth.Permission
+import com.aiocare.bluetooth.di.KoinContext
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.sdk.AioCareSdk
-import com.aiocare.sdk.permission.Permission
 import com.aiocare.util.ButtonVM
 
 data class IntroUiState(
@@ -22,7 +23,7 @@ class IntroViewModel constructor(
     private lateinit var navigateCallback: (String) -> Unit
     fun init(permission: Permission, navigate: (String) -> Unit) {
         cachedPermission = permission
-        AioCareSdk.init(permission = cachedPermission)
+        AioCareSdk.init(permission = cachedPermission, KoinContext.DeviceFactoryType.Real)
         navigateCallback = navigate
         checkPermission(cachedPermission)
     }

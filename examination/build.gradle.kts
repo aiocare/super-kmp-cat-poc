@@ -22,7 +22,7 @@ kotlin {
     android {
         compilations.all {
             kotlinOptions {
-                jvmTarget = "1.8"
+                jvmTarget = "17"
             }
         }
     }
@@ -44,10 +44,12 @@ kotlin {
         val commonMain by getting {
             dependencies {
 
-                implementation("com.aiocare.sdk:spirometer-sdk:+")
+//                implementation("com.aiocare.sdk:spirometer-sdk:+")
                 implementation(project(":super-cat"))
-                implementation("com.aiocare.cortex:cortex:+")
-                implementation("com.aiocare.models:common-models:+")
+                implementation("com.aiocare:bluetooth:0.7.44")
+                implementation("com.aiocare:sdk:0.7.44")
+//                implementation("com.aiocare.cortex:cortex:+")
+//                implementation("com.aiocare.models:common-models:+")
                 implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
                 implementation("com.jstarczewski.kstate:kstate-core:0.0.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -98,6 +100,12 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
 }
 dependencies {
 //    implementation("androidx.appcompat:appcompat:1.6.1")

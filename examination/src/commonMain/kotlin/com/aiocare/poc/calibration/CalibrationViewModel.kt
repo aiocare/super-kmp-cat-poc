@@ -1,22 +1,11 @@
 package com.aiocare.poc.calibration
 
-import com.aiocare.cortex.cat.InputData
-import com.aiocare.cortex.cat.hans.Point
-import com.aiocare.model.RawData
+import com.aiocare.bluetooth.device.AioCareDevice
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
 import com.aiocare.poc.Holder
 import com.aiocare.poc.searchDevice.DeviceItem
-import com.aiocare.sdk.IAioCareDevice
-import com.aiocare.sdk.IAioCareScan
-import com.aiocare.sdk.connecting.getIConnectMobile
-import com.aiocare.sdk.scan.getIScan
-import com.aiocare.sdk.services.readBattery
-import com.aiocare.sdk.services.readFlow
-import com.aiocare.sdk.services.readHumidity
-import com.aiocare.sdk.services.readPressure
-import com.aiocare.sdk.services.readTemperature
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -61,8 +50,8 @@ data class EnvironmentalData(
 
 data class GraphObjects(
     val graphItems: List<Float> = listOf(),
-    val exhalePoints: List<Point> = listOf(),
-    val inhalePoints: List<Point> = listOf()
+//    val exhalePoints: List<Point> = listOf(),
+//    val inhalePoints: List<Point> = listOf()
 )
 
 class CalibrationViewModel(
@@ -75,86 +64,86 @@ class CalibrationViewModel(
         private var timerJob: Job? = null
         private var afterEnvJob: Job? = null
 
-        private val rawSignal = mutableListOf<RawData>()
+//        private val rawSignal = mutableListOf<RawData>()
 
-        private var device: IAioCareDevice? = null
+        private var device: AioCareDevice? = null
     }
 
     init {
         scanJob = viewModelScope.launch {
-            getIScan().start()?.collect { scan ->
-                updateUiState {
-                    it.copy(
-                        devices = devices.plus(DeviceItem(
-                            text = scan.getName(),
-                            aioCareScan = scan,
-                            onDeviceClicked = { scanClicked(scan) }
-                        )).distinctBy { item -> item.aioCareScan.getName() }
-                    )
-                }
-            }
+//            getIScan().start()?.collect { scan ->
+//                updateUiState {
+//                    it.copy(
+//                        devices = devices.plus(DeviceItem(
+//                            text = scan.getName(),
+//                            aioCareScan = scan,
+//                            onDeviceClicked = { scanClicked(scan) }
+//                        )).distinctBy { item -> item.aioCareScan.getName() }
+//                    )
+//                }
+//            }
         }
     }
 
-    private fun scanClicked(scan: IAioCareScan) {
-        GlobalScope.launch {
-            updateLoader(true)
-            device = getIConnectMobile().connectMobile(this, scan)
-            scanJob?.cancelAndJoin()
-
-            val temperature = device?.readTemperature()
-            updateUiState {
-                it.copy(before = before.copy(temperature = temperature))
-            }
-
-            val pressure = device?.readPressure()
-            updateUiState {
-                it.copy(before = before.copy(pressure = pressure))
-            }
-            val humidity = device?.readHumidity()
-            updateUiState {
-                it.copy(before = before.copy(humidity = humidity))
-            }
-            val battery = device?.readBattery()
-            updateUiState {
-                it.copy(deviceInfo = deviceInfo.copy(battery = battery))
-            }
-
-            updateLoader(false)
-            updateName(scan.getName())
-
-            updateUiState {
-                it.copy(
-                    devices = listOf(),
-                    startBtn = startBtn.copy(visible = true, onClickAction = {
-                        device?.let {
-                            startFlow(it)
-                        }
-                    }),
-                    stopBtn = stopBtn.copy(onClickAction = {
-                        stopFlow()
-                    })
-                )
-            }
-        }
-    }
+//    private fun scanClicked(scan: IAioCareScan) {
+//        GlobalScope.launch {
+//            updateLoader(true)
+//            device = getIConnectMobile().connectMobile(this, scan)
+//            scanJob?.cancelAndJoin()
+//
+//            val temperature = device?.readSingleTemperatureCommand?.execute()
+//            updateUiState {
+//                it.copy(before = before.copy(temperature = temperature?.toFloat()))
+//            }
+//
+//            val pressure = device?.readPressureCommand?.execute()
+//            updateUiState {
+//                it.copy(before = before.copy(pressure = pressure?.toFloat()))
+//            }
+//            val humidity = device?.readHumidityCommand?.execute()
+//            updateUiState {
+//                it.copy(before = before.copy(humidity = humidity?.toFloat()))
+//            }
+//            val battery = device?.readBatteryCommand?.execute()
+//            updateUiState {
+//                it.copy(deviceInfo = deviceInfo.copy(battery = battery))
+//            }
+//
+//            updateLoader(false)
+//            updateName(scan.getName())
+//
+//            updateUiState {
+//                it.copy(
+//                    devices = listOf(),
+//                    startBtn = startBtn.copy(visible = true, onClickAction = {
+//                        device?.let {
+//                            startFlow(it)
+//                        }
+//                    }),
+//                    stopBtn = stopBtn.copy(onClickAction = {
+//                        stopFlow()
+//                    })
+//                )
+//            }
+//        }
+//    }
 
     private fun envAfter() {
         afterEnvJob?.cancel()
         afterEnvJob = viewModelScope.launch {
             updateLoader(true)
             try {
-                val temperature = device?.readTemperature()
+                val temperature = device?.readSingleTemperatureCommand?.execute()
                 updateUiState {
-                    it.copy(after = after.copy(temperature = temperature))
+                    it.copy(after = after.copy(temperature = temperature?.toFloat()))
                 }
-                val pressure = device?.readPressure()
+                val pressure = device?.readPressureCommand?.execute()
                 updateUiState {
-                    it.copy(after = after.copy(pressure = pressure))
+                    it.copy(after = after.copy(pressure = pressure?.toFloat()))
                 }
-                val humidity = device?.readHumidity()
+                val humidity = device?.readHumidityCommand?.execute()
                 updateUiState {
-                    it.copy(after = after.copy(humidity = humidity))
+                    it.copy(after = after.copy(humidity = humidity?.toFloat()))
                 }
 
             } catch (e: Throwable) {
@@ -196,10 +185,10 @@ class CalibrationViewModel(
                     ),
                     startBtn = startBtn.copy(visible = false),
                     stopBtn = stopBtn.copy(visible = false),
-                    graphObjects = graphObjects.copy(graphItems = rawSignal.map { it.flow }
-                        .flatten().let {
-                            InputData(it)
-                        }.map { it.toFloat() })
+//                    graphObjects = graphObjects.copy(graphItems = rawSignal.map { it.flow }
+//                        .flatten().let {
+//                            InputData(it)
+//                        }.map { it.toFloat() })
                 )
             }
         }
@@ -211,20 +200,20 @@ class CalibrationViewModel(
             updateLoader(true)
             try {
 
-                val temperature = device?.readTemperature()
+                val temperature = device?.readSingleTemperatureCommand?.execute()
                 updateUiState {
-                    it.copy(before = before.copy(temperature = temperature))
+                    it.copy(before = before.copy(temperature = temperature?.toFloat()))
                 }
 
-                val pressure = device?.readPressure()
+                val pressure = device?.readPressureCommand?.execute()
                 updateUiState {
-                    it.copy(before = before.copy(pressure = pressure))
+                    it.copy(before = before.copy(pressure = pressure?.toFloat()))
                 }
-                val humidity = device?.readHumidity()
+                val humidity = device?.readHumidityCommand?.execute()
                 updateUiState {
-                    it.copy(before = before.copy(humidity = humidity))
+                    it.copy(before = before.copy(humidity = humidity?.toFloat()))
                 }
-                val battery = device?.readBattery()
+                val battery = device?.readBatteryCommand?.execute()
                 updateUiState {
                     it.copy(deviceInfo = deviceInfo.copy(battery = battery))
                 }
@@ -263,10 +252,10 @@ class CalibrationViewModel(
         }
     }
 
-    private fun startFlow(device: IAioCareDevice) {
+    private fun startFlow(device: AioCareDevice) {
         flowJob = viewModelScope.launch {
             startCalculatingSeconds()
-            rawSignal.clear()
+//            rawSignal.clear()
             updateUiState {
                 it.copy(
                     graphObjects = GraphObjects(),
@@ -278,15 +267,15 @@ class CalibrationViewModel(
                 )
             }
             try {
-                device.readFlow().collectIndexed { index, value ->
-                    rawSignal.add(
-                        RawData(
-                            flow = value.toList(),
-//                        temperature = value.second.toList(),
-//                        pressure = tempPressure,
-//                        humidity = tempHumidity
-                        )
-                    )
+                device.readFlowCommand.values.collectIndexed { index, value ->
+//                    rawSignal.add(
+//                        RawData(
+//                            flow = value.toList(),
+////                        temperature = value.second.toList(),
+////                        pressure = tempPressure,
+////                        humidity = tempHumidity
+//                        )
+//                    )
                     updateGraph(value.toList())
                 }
             } catch (e: Throwable) {

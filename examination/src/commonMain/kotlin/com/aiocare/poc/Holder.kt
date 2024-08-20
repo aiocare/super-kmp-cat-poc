@@ -1,9 +1,8 @@
 package com.aiocare.poc
 
-import com.aiocare.cortex.cat.hans.Command
+import com.aiocare.supercat.api.HansCommand
 
 object Holder {
-
-    var selectedSequence: List<Command>? = null
+    var selectedSequence: List<HansCommand>? = null
     var name: String = ""
 }
