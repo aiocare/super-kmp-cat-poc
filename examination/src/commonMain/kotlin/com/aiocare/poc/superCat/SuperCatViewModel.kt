@@ -56,6 +56,7 @@ data class SuperCatUiState(
     val hansSerial: InputData? = null,
     val disconnectBtn: ButtonVM = ButtonVM(visible = false, text = "disconnect"),
     val examBtn: ButtonVM = ButtonVM(visible = false, text = "Sequences"),
+    val cancelBtn: ButtonVM = ButtonVM(visible = false, text = "Cancel"),
     val envBtn: ButtonVM = ButtonVM(visible = false, text = "read device env"),
     val envAfterBtn: ButtonVM = ButtonVM(visible = false, text = "batt"),
     val info: String = "",
@@ -286,6 +287,13 @@ class SuperCatViewModel(
                 copy(
                     deviceData = DeviceData(scan.name, battery),
                     devices = listOf(),
+                    cancelBtn = cancelBtn.copy(
+                        visible = true,
+                        onClickAction = {
+                            timerJob?.cancel()
+                            actionJob?.cancel()
+                        }
+                    ),
                     examBtn = examBtn.copy(
                         visible = true,
                         onClickAction = {

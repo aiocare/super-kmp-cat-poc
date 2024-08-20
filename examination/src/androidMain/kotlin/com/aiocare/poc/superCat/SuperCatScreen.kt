@@ -107,6 +107,7 @@ fun SuperCatScreen(viewModel: SuperCatViewModel, navController: NavController) {
                 .horizontalScroll(scrollState)
         ) {
             SimpleButton(buttonVM = viewModel.uiState.examBtn)
+            SimpleButton(buttonVM = viewModel.uiState.cancelBtn)
             SimpleButton(buttonVM = viewModel.uiState.disconnectBtn)
             SimpleButton(buttonVM = viewModel.uiState.envBtn)
             SimpleButton(buttonVM = viewModel.uiState.envAfterBtn)
