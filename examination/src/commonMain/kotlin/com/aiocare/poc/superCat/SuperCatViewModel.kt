@@ -575,10 +575,16 @@ class SuperCatViewModel(
         return Clock.System.now().toString()
     }
 
-    private suspend fun zeroFlow(): List<Int> {
+    private data class ZeroFlowData(
+        val zeroFlow: List<Int>,
+        val zeroFlowDataTime: Long,
+        val zeroFlowDataCounter: Int)
+
+    private suspend fun zeroFlow(): ZeroFlowData {
         updateProgress("zeroFlow....")
         val out = mutableListOf<Int>()
-        return coroutineScope {
+        val startTime = Clock.System.now().toEpochMilliseconds()
+        val data =  coroutineScope {
             val job = launch {
                 device!!.readFlowCommand.values.collect {
                     it.forEach {
@@ -592,10 +598,12 @@ class SuperCatViewModel(
             ErrorChecker.checkZeroFlowAndThrow(out)
             return@coroutineScope out
         }
+        val finishTime = Clock.System.now().toEpochMilliseconds()
+        return ZeroFlowData(data, finishTime-startTime, data.size)
     }
 
     private suspend fun processSending(
-        zeroFlow: List<Int>,
+        zeroFlow: ZeroFlowData,
         steadyFlowRawData: List<SteadyFlowData>?,
         waveformRawData: List<WaveformData>?,
         name: String,
@@ -659,7 +667,9 @@ class SuperCatViewModel(
                 humidity = humidity!!,
                 timestamp = Clock.System.now().toEpochMilliseconds()
             ),
-            zeroFlowData = zeroFlow,
+            zeroFlowData = zeroFlow.zeroFlow,
+            zeroFlowDataTime = zeroFlow.zeroFlowDataTime,
+            zeroFlowDataCount = zeroFlow.zeroFlowDataCounter,
             steadyFlowRawData = steadyFlowRawData,
             waveformRawData = waveformRawData,
             type = name,

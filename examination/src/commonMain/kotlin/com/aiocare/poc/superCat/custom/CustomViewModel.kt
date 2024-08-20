@@ -77,6 +77,8 @@ data class CustomData(
     val info: String = "",
     val results: MutableList<CustomViewModel.SequenceResultData> = mutableListOf(),
     val zeroFlow: List<Int>? = null,
+    val zeroFlowDataTime: Long? = null,
+    val zeroFlowDataCount: Int? = null,
     val before: EnvironmentalData? = null,
     val beforeTime: Long? = null,
     val currentEnvData: String = "",
@@ -374,9 +376,10 @@ class CustomViewModel(
         if (uiState.customData?.zeroFlow == null) {
             updateProgress("zeroFlow....")
             val out = mutableListOf<Int>()
+            val startTime = Clock.System.now().toEpochMilliseconds()
             val result = coroutineScope {
                 val job = launch {
-                    device!!.readFlowCommand?.values?.collect {
+                    device!!.readFlowCommand.values.collect {
                         it.forEach {
                             out.add(it)
                         }
@@ -388,7 +391,12 @@ class CustomViewModel(
                 ErrorChecker.checkZeroFlowAndThrow(out)
                 return@coroutineScope out
             }
-            updateUiState { copy(customData = uiState.customData?.copy(zeroFlow = result)) }
+            val finishTime = Clock.System.now().toEpochMilliseconds()
+            updateUiState { copy(customData = uiState.customData?.copy(
+                zeroFlow = result,
+                zeroFlowDataCount = result.size,
+                zeroFlowDataTime = finishTime - startTime
+            )) }
         }
     }
 
@@ -524,6 +532,8 @@ class CustomViewModel(
                 timestamp = Clock.System.now().toEpochMilliseconds()
             ),
             zeroFlowData = uiState.customData!!.zeroFlow!!,
+            zeroFlowDataTime = uiState.customData!!.zeroFlowDataTime!!,
+            zeroFlowDataCount = uiState.customData!!.zeroFlowDataCount!!,
             steadyFlowRawData = null,
             waveformRawData = uiState.customData!!.results.map {
                 WaveformData(

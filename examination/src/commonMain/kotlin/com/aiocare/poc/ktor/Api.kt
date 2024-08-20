@@ -79,6 +79,8 @@ class Api {
         val environmentalParamBefore: Env,
         val environmentalParamAfter: Env,
         val zeroFlowData: List<Int>,
+        val zeroFlowDataTime: Long,
+        val zeroFlowDataCount: Int,
         val steadyFlowRawData: List<SteadyFlowData>?,
         val waveformRawData: List<WaveformData>?,
         val type: String,
