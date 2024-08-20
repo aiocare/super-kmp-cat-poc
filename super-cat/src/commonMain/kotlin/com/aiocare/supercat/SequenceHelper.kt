@@ -1,6 +1,7 @@
 package com.aiocare.supercat
 
-import com.aiocare.model.Units
+import com.aiocare.units.Units
+
 
 val standardPef by lazy {
     listOf(
@@ -159,6 +160,6 @@ val v5 by lazy {
     )
 }
 
-enum class CalibrationSequenceType(val maxFlow: Units.FlowUnit.L_S) {
-    OLD_0_16(Units.FlowUnit.L_S(16.0)), NEW_0_17(Units.FlowUnit.L_S(17.0))
+enum class CalibrationSequenceType(val maxFlow: Units.FlowUnit.Ls) {
+    OLD_0_16(Units.FlowUnit.Ls(16.0)), NEW_0_17(Units.FlowUnit.Ls(17.0))
 }

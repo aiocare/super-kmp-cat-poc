@@ -1,14 +1,13 @@
 package com.aiocare.supercat
 
-import com.aiocare.model.SteadyFlowData
-import com.aiocare.model.Units
-import com.aiocare.model.WaveformData
-import com.aiocare.sdk.IAioCareDevice
-import com.aiocare.sdk.services.readFlow
+import com.aiocare.bluetooth.device.AioCareDevice
+import com.aiocare.list.toIntList
+import com.aiocare.models.SteadyFlowData
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.supercat.api.Response
 import com.aiocare.supercat.api.TimeoutTypes
+import com.aiocare.units.Units
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
@@ -19,16 +18,16 @@ class Logic(private val hostAddress: String) {
     private val api by lazy { HansProxyApi(hostAddress, TimeoutTypes.NORMAL) }
     private val longTimeoutApi by lazy { HansProxyApi(hostAddress, TimeoutTypes.LONG) }
 
-    private fun prepareV7(type: CalibrationSequenceType): MutableList<Units.FlowUnit.L_S> {
-        var current = Units.FlowUnit.L_S(0.1)
-        val list = mutableListOf<Units.FlowUnit.L_S>()
+    private fun prepareV7(type: CalibrationSequenceType): MutableList<Units.FlowUnit.Ls> {
+        var current = Units.FlowUnit.Ls(0.1)
+        val list = mutableListOf<Units.FlowUnit.Ls>()
         while (current < type.maxFlow) {
             list.add(current)
             val step = when (current.value) {
                 in 0.0..0.99 -> 0.1
                 else -> 0.2
             }
-            current = Units.FlowUnit.L_S(current + Units.FlowUnit.L_S(step))
+            current = Units.FlowUnit.Ls(current + Units.FlowUnit.Ls(step))
         }
         return list
     }
@@ -37,10 +36,10 @@ class Logic(private val hostAddress: String) {
         return list.times(repeat).map {
             CalibrationActions(
                 name = it,
-                flow = Units.FlowUnit.L_S(0.0),
-                volume = Units.VolumeUnit.LITER(0.0),
+                flow = Units.FlowUnit.Ls(0.0),
+                volume = Units.VolumeUnit.Liter(0.0),
                 beforeAction = {
-//                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+//                    api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
 //                    api.command(HansCommand.reset())
                     api.waveformLoad(HansCommand.waveform(it))
                     longTimeoutApi.command(HansCommand.reset())
@@ -54,8 +53,8 @@ class Logic(private val hostAddress: String) {
     }
 
     data class CalibrationActions(
-        val flow: Units.FlowUnit.L_S,
-        val volume: Units.VolumeUnit.LITER,
+        val flow: Units.FlowUnit.Ls,
+        val volume: Units.VolumeUnit.Liter,
         val name: String? = null,
         val beforeAction: suspend () -> Unit,
         val exhaleAction: suspend () -> Unit,
@@ -70,20 +69,20 @@ class Logic(private val hostAddress: String) {
     private fun prepareV5(): List<CalibrationActions> {
         return v5.map {
             CalibrationActions(
-                flow = Units.FlowUnit.L_S(it.first),
-                volume = Units.VolumeUnit.LITER(it.second),
+                flow = Units.FlowUnit.Ls(it.first),
+                volume = Units.VolumeUnit.Liter(it.second),
                 name = "v5",
                 beforeAction = {
                     if (it.first == 0.10) {
-                        api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+                        api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
                         longTimeoutApi.command(HansCommand.reset())
                     }
                 },
                 exhaleAction = {
                     api.command(
                         HansCommand.flow(
-                            Units.FlowUnit.L_S(it.first),
-                            Units.VolumeUnit.LITER(it.second),
+                            Units.FlowUnit.Ls(it.first),
+                            Units.VolumeUnit.Liter(it.second),
                             HansCommand.Companion.Type.Exhale
                         )
                     )
@@ -91,8 +90,8 @@ class Logic(private val hostAddress: String) {
                 inhaleAction = {
                     api.command(
                         HansCommand.flow(
-                            Units.FlowUnit.L_S(it.first),
-                            Units.VolumeUnit.LITER(it.second),
+                            Units.FlowUnit.Ls(it.first),
+                            Units.VolumeUnit.Liter(it.second),
                             HansCommand.Companion.Type.Inhale
                         )
                     )
@@ -101,12 +100,12 @@ class Logic(private val hostAddress: String) {
         }
     }
 
-    private fun List<Units.FlowUnit.L_S>.transformToCalibrationActions(): List<CalibrationActions> =
+    private fun List<Units.FlowUnit.Ls>.transformToCalibrationActions(): List<CalibrationActions> =
         this.map { prepareCalibrationActions(it) }
 
     suspend fun processWaveform(
         actions: List<CalibrationActions>,
-        device: IAioCareDevice,
+        device: AioCareDevice,
         repeat: Int,
         log: (String) -> Unit,
         getTime: () -> Long
@@ -127,7 +126,7 @@ class Logic(private val hostAddress: String) {
                     it.beforeAction.invoke()
                     coroutineScope {
                         recordJob = launch {
-                            device.readFlow().collect {
+                            device.readFlowCommand.values.collect {
                                 it.forEach {
                                     recordedRawSignal.add(it)
                                 }
@@ -153,7 +152,7 @@ class Logic(private val hostAddress: String) {
                         )
                     }
                 } catch (e: Exception) {
-                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+                    api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
                     longTimeoutApi.command(HansCommand.reset())
                     log(e.message ?: e.toString())
                 }
@@ -164,7 +163,7 @@ class Logic(private val hostAddress: String) {
 
     suspend fun processSequence(
         actions: List<CalibrationActions>,
-        device: IAioCareDevice,
+        device: AioCareDevice,
         repeat: Int,
         log: (String) -> Unit
     ): List<SteadyFlowData> {
@@ -182,7 +181,7 @@ class Logic(private val hostAddress: String) {
                     it.beforeAction.invoke()
                     coroutineScope {
                         recordJob = launch {
-                            device.readFlow().collect {
+                            device.readFlowCommand.values.collect {
                                 it.forEach {
                                     recordedRawSignal.add(it)
                                 }
@@ -193,7 +192,7 @@ class Logic(private val hostAddress: String) {
                         recordJob?.cancelAndJoin()
                         coroutineScope {
                             recordJob = launch {
-                                device.readFlow().collect {
+                                device.readFlowCommand.values.collect {
                                     it.forEach {
                                         recordedInhaleRawSignal.add(it)
                                     }
@@ -204,14 +203,14 @@ class Logic(private val hostAddress: String) {
                             recordJob?.cancelAndJoin()
                             sfd = SteadyFlowData(
                                 it.flow.value,
-                                it.flow.value,
-                                recordedRawSignal,
-                                recordedInhaleRawSignal
+                                it.volume.value,
+                                recordedRawSignal.toIntList(),
+                                recordedInhaleRawSignal.toIntList()
                             )
                         }
                     }
                 } catch (e: Exception) {
-                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+                    api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
                     longTimeoutApi.command(HansCommand.reset())
                     log(e.message ?: e.toString())
                 }
@@ -224,10 +223,10 @@ class Logic(private val hostAddress: String) {
         return (1..11).map {
             CalibrationActions(
                 name = "C$it",
-                flow = Units.FlowUnit.L_S(it.toDouble()),
-                volume = Units.VolumeUnit.LITER(it.toDouble()),
+                flow = Units.FlowUnit.Ls(it.toDouble()),
+                volume = Units.VolumeUnit.Liter(it.toDouble()),
                 beforeAction = {
-                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+                    api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
                     longTimeoutApi.command(HansCommand.reset())
                 },
                 exhaleAction = {
@@ -238,19 +237,19 @@ class Logic(private val hostAddress: String) {
         }.times(repeat)
     }
 
-    private fun prepareCalibrationActions(flow: Units.FlowUnit.L_S): CalibrationActions {
+    private fun prepareCalibrationActions(flow: Units.FlowUnit.Ls): CalibrationActions {
         val volumeValue = when (flow.value) {
-            in 0.0..1.0 -> Units.VolumeUnit.LITER(flow.value * 2)
-            in 1.0..1.99 -> Units.VolumeUnit.LITER(flow.value)
-            in 16.0..18.0 -> Units.VolumeUnit.LITER(8.0)
-            else -> Units.VolumeUnit.LITER(flow.value / 2)
+            in 0.0..1.0 -> Units.VolumeUnit.Liter(flow.value * 2)
+            in 1.0..1.99 -> Units.VolumeUnit.Liter(flow.value)
+            in 16.0..18.0 -> Units.VolumeUnit.Liter(8.0)
+            else -> Units.VolumeUnit.Liter(flow.value / 2)
         }
         return CalibrationActions(
             flow = flow,
             volume = volumeValue,
             beforeAction = {
-                if (flow == Units.FlowUnit.L_S(0.1)) {
-                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
+                if (flow == Units.FlowUnit.Ls(0.1)) {
+                    api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
                     longTimeoutApi.command(HansCommand.reset())
                 }
             },
