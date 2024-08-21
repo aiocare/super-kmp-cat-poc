@@ -67,9 +67,9 @@ kotlin {
         val commonMain by getting {
             dependencies {
 //                implementation("com.aiocare:sdk:0.7.44")
-                implementation("com.aiocare:base-shared-data:0.7.44")
-                implementation("com.aiocare:bluetooth:0.7.44")
-                implementation("com.aiocare:command:0.7.44")
+                implementation("com.aiocare:base-shared-data:0.7.45-rc1")
+                implementation("com.aiocare:bluetooth:0.7.45-rc1")
+                implementation("com.aiocare:command:0.7.45-rc1")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 //                implementation("com.aiocare.sdk:spirometer-sdk:0.0.8")
 //                implementation("com.aiocare.models:common-models:+")
