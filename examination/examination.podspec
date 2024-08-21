@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'examination'
-    spec.version                  = '2.0.15'
+    spec.version                  = '2.0.22'
     spec.homepage                 = 'Link to the Shared Module homepage'
     spec.source                   = { :http=> ''}
     spec.authors                  = ''

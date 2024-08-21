@@ -15,21 +15,24 @@ import com.aiocare.poc.superCat.InitDialogData
 import com.aiocare.poc.superCat.InitHolder
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.poc.superCat.RawDataType
-import com.aiocare.poc.superCat.RecordingType
+import com.aiocare.poc.superCat.RecordingTypeHelper
 import com.aiocare.sdk.IAioCareDevice
 import com.aiocare.sdk.IAioCareScan
 import com.aiocare.sdk.connecting.getIConnect
 import com.aiocare.sdk.connecting.getIConnectMobile
 import com.aiocare.sdk.scan.getIScan
+import com.aiocare.sdk.services.readBattery
 import com.aiocare.sdk.services.readFlow
 import com.aiocare.sdk.services.readHumidity
 import com.aiocare.sdk.services.readPressure
 import com.aiocare.sdk.services.readTemperature
+import com.aiocare.supercat.NameHelper
 import com.aiocare.supercat.PhoneInfo
 import com.aiocare.supercat.api.Dir
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.supercat.api.Response
+import com.aiocare.supercat.api.TimeoutTypes
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
@@ -60,8 +63,10 @@ data class CustomUiState(
     val errorData: ErrorData? = null,
     val initDialogBtn: ButtonVM = ButtonVM(true, "Settings") {},
     val navSuperCatBtn: ButtonVM = ButtonVM(true, "nav to superCat") {},
-    val deviceName: String = ""
+    val deviceData: DeviceData? = null
 )
+
+data class DeviceData(val name: String, val battery: Int)
 
 data class ErrorData(val title: String, val description: String, val onClose: () -> Unit)
 
@@ -121,6 +126,7 @@ class CustomViewModel(
                     onValueChanged = { v ->
                         InitHolder.address = v
                         updateUiState { copy(url = url?.copy(value = v)) }
+                        viewModelScope.launch { setupCollectingEnv() }
                     }),
                 note = InputData(
                     "",
@@ -153,15 +159,21 @@ class CustomViewModel(
                 })
             )
         }
+        viewModelScope.launch { setupCollectingEnv() }
+    }
+
+    private suspend fun safeCancelJob(){
+        if(actionJob!=null && ! actionJob!!.isCancelled)
+            actionJob?.cancelAndJoin()
     }
 
     private suspend fun setupCollectingEnv() {
-        actionJob?.cancelAndJoin()
+        safeCancelJob()
         actionJob = viewModelScope.launch {
             while (true) {
                 withContext(NonCancellable) {
                     try {
-                        HansProxyApi(uiState.url?.value ?: "").apply {
+                        HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL).apply {
                             val temp = (command(HansCommand.readTemperature()))
                             val hum = (command(HansCommand.readHumidity()))
 
@@ -194,8 +206,8 @@ class CustomViewModel(
                     selectedAddress = InitHolder.address,
                     selectedOperator = InitHolder.operator,
                     selectedName = InitHolder.hansName,
-                    hansName = listOf("112-121", "112-093", "112-123").map { current ->
-                        ButtonVM(true, current, {
+                    hansName = listOf("112-121", "112-093", "112-123", "112-131").map { current ->
+                        ButtonVM(true, current, true, {
                             InitHolder.hansName = current
                             updateUiState {
                                 copy(
@@ -210,7 +222,7 @@ class CustomViewModel(
                         "192.168.1.217:8080",
                         "192.168.1.183:8080"
                     ).map { current ->
-                        ButtonVM(true, current, {
+                        ButtonVM(true, current, true, {
                             InitHolder.address = current
                             updateUiState {
                                 copy(
@@ -218,10 +230,11 @@ class CustomViewModel(
                                     url = uiState.url?.copy(value = "http://${current}")
                                 )
                             }
+                            viewModelScope.launch { setupCollectingEnv() }
                         })
                     },
                     operator = listOf("Piotr", "Milena", "Darek", "Szymon").map {
-                        ButtonVM(true, it, {
+                        ButtonVM(true, it, true, {
                             operator = it
                             InitHolder.operator = it
                             updateUiState {
@@ -245,20 +258,20 @@ class CustomViewModel(
                 )
             )
         }
+        viewModelScope.launch { setupCollectingEnv() }
     }
 
     private fun startObservingState() {
         viewModelScope.launch {
             getIConnect().getConnectedFlow().collect {
                 if (!it) {
-                    actionJob?.cancelAndJoin()
+                    safeCancelJob()
                     device = null
                     startSearching()
                     updateUiState {
                         copy(
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                            customData = null,
-                            deviceName = ""
+                            deviceData = null
                         )
                     }
                 }
@@ -273,15 +286,17 @@ class CustomViewModel(
             scanJob?.cancelAndJoin()
             startObservingState()
             setupCustomData()
+            val battery = device?.readBattery()?:0
             updateUiState {
                 copy(
-                    deviceName = scan.getName(),
+                    deviceData = DeviceData(scan.getName(), battery),
                     devices = listOf(),
                     disconnectBtn = ButtonVM(true, text = "disconnected") {
                         disconnect()
                     })
             }
             loading(false)
+            viewModelScope.launch { setupCollectingEnv() }
         }
     }
 
@@ -290,7 +305,8 @@ class CustomViewModel(
             viewModelScope.launch {
                 try {
                     loading(true)
-                    actionJob?.cancelAndJoin()
+                    safeCancelJob()
+                    updateBattery()
                     checkEnvironmentalData()
                     checkZeroFlow()
                     uiState.customData?.results?.add(processSequence(sequence))
@@ -389,7 +405,7 @@ class CustomViewModel(
 
     private suspend fun processSequence(sequence: String): SequenceResultData {
         updateProgress(sequence ?: "")
-        val api = HansProxyApi(uiState.url?.value ?: "")
+        val api = HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL)
         api.waveformLoad(HansCommand.waveform(sequence))
         api.command(HansCommand.reset())
 
@@ -407,13 +423,15 @@ class CustomViewModel(
                     }
                 }
             }
-            api.command(HansCommand.rawCommand("Run"))
+            updateProgress("start waveform")
+            api.command(HansCommand.run())
             recordJob?.cancelAndJoin()
             val sendSpirometryResult =
                 when (val res = api.command(HansCommand.waveformData())) {
                     is Response.TEXT -> res.response
                     else -> "bad response"
                 }
+            updateProgress("finished waveform")
             return@coroutineScope SequenceResultData(
                 sequence,
                 sendSpirometryResult,
@@ -426,6 +444,7 @@ class CustomViewModel(
     }
 
     private fun setupCustomData() {
+        if(uiState.customData==null)
         updateUiState {
             copy(
                 customData = CustomData(
@@ -437,21 +456,12 @@ class CustomViewModel(
                     },
                     executeWithoutRecordingBtn = ButtonVM(true, "run waveform without recording") {
                         viewModelScope.launch {
-                            actionJob?.cancelAndJoin()
+                            safeCancelJob()
                             try {
                                 loading(true)
-                                updateProgress("start execute without recording, load")
-                                HansProxyApi(
-                                    uiState.url?.value ?: ""
-                                ).waveformLoad(
-                                    HansCommand.waveform(
-                                        uiState.customData?.selectedWaveForm ?: ""
-                                    )
-                                )
-                                updateProgress("start execute without recording, reset")
-                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
+                                updateBattery()
                                 updateProgress("start execute without recording, run")
-                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.run())
+                                HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL).command(HansCommand.run())
                                 updateProgress("finish execute without recording")
                                 setupCollectingEnv()
                                 loading(false)
@@ -464,9 +474,9 @@ class CustomViewModel(
                     resetBtn = ButtonVM(true, "hans Reset") {
                         viewModelScope.launch {
                             try {
-                                actionJob?.cancelAndJoin()
+                                safeCancelJob()
                                 updateProgress("reseting...")
-                                HansProxyApi(uiState.url?.value ?: "").command(HansCommand.reset())
+                                HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.LONG).command(HansCommand.reset())
                                 updateProgress("reseting finished")
                                 setupCollectingEnv()
                             } catch (e: Exception) {
@@ -476,7 +486,7 @@ class CustomViewModel(
                     },
                     sendBtn = ButtonVM(true, "save results") {
                         viewModelScope.launch {
-                            actionJob?.cancelAndJoin()
+                            safeCancelJob()
                             afterSendData()
                         }
                     }
@@ -499,7 +509,7 @@ class CustomViewModel(
                 hansSerialNumber = uiState.hansSerial?.value ?: "hans_serial_number",
                 hansCalibrationId = (uiState.hansSerial?.value ?: "000-000").takeLast(3),
                 appVersion = VersionHolder.version,
-                spirometerDeviceSerial = uiState.deviceName,
+                spirometerDeviceSerial = uiState.deviceData?.name?:"",
                 operator = operator,
                 date = calculateDate()
             ),
@@ -519,18 +529,19 @@ class CustomViewModel(
             steadyFlowRawData = null,
             waveformRawData = uiState.customData!!.results.map {
                 WaveformData(
-                    it.name,
+                    NameHelper.parse(it.name),
                     it.waveFormRawSignal,
                     "${it.sendSpirometryResult}\n${(it.humidity as Response.TEXT).response}\n${(it.temperature as Response.TEXT).response}",
                     it.timestamp
                 )
             },
-            type = RecordingType.CUSTOM_SEQUENCE.name,
+            type = RecordingTypeHelper.findTypeBasedOnNames(uiState.customData!!.results.map { it.name }).name,
             rawDataType = RawDataType.WAVEFORM.name,
             notes = uiState.note?.value ?: ""
         )
         trySendToApi(request)
     }
+
 
     private suspend fun trySendToApi(request: Api.PostData) {
         try {
@@ -575,19 +586,37 @@ class CustomViewModel(
     private fun selectSequence() {
         viewModelScope.launch {
             try {
-                val sequences = HansProxyApi(uiState.url?.value ?: "").getAvailableSequences()
+                val sequences = HansProxyApi(uiState.url?.value ?: "",TimeoutTypes.NORMAL).getAvailableSequences()
                 updateUiState {
                     copy(
                         selectData = SelectData(sequences, { result ->
-                            updateUiState {
-                                copy(
-                                    selectData = null,
-                                    customData = uiState.customData?.copy(
-                                        selectedWaveForm = result.removePrefix(
-                                            "/waveforms/"
-                                        )
+                            viewModelScope.launch {
+                                safeCancelJob()
+                                try {
+                                    HansProxyApi(
+                                        uiState.url?.value ?: "", TimeoutTypes.NORMAL
+                                    ).waveformLoad(
+                                        HansCommand.waveform(result.removePrefix("/waveforms/"))
                                     )
-                                )
+
+                                    updateUiState {
+                                        copy(
+                                            selectData = null,
+                                            customData = uiState.customData?.copy(
+                                                selectedWaveForm = result.removePrefix(
+                                                    "/waveforms/"
+                                                )
+                                            )
+                                        )
+                                    }
+                                }catch (e: Exception){
+                                    updateUiState {
+                                        copy(
+                                            selectData = null,
+                                        )
+                                    }
+                                    updateProgress("error during setting waveform: ${e.message}")
+                                }
                             }
                         })
                     )
@@ -607,18 +636,25 @@ class CustomViewModel(
         }
     }
 
+    private suspend fun updateBattery(){
+        device?.readBattery()?.let {  bat ->
+            updateUiState {
+                copy(deviceData = deviceData?.copy(battery = bat))
+            }
+        }
+    }
+
     private fun disconnect() {
         loading(true)
         viewModelScope.launch {
-            actionJob?.cancelAndJoin()
+            safeCancelJob()
             getIConnect().disconnect()
             startSearching()
             loading(false)
             updateUiState {
                 copy(
-                    deviceName = "",
+                    deviceData = null,
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                    customData = null
                 )
             }
         }

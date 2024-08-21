@@ -8,6 +8,7 @@ import com.aiocare.sdk.services.readFlow
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.supercat.api.Response
+import com.aiocare.supercat.api.TimeoutTypes
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 
 class Logic(private val hostAddress: String) {
 
-    private val api by lazy { HansProxyApi(hostAddress) }
+    private val api by lazy { HansProxyApi(hostAddress, TimeoutTypes.NORMAL) }
+    private val longTimeoutApi by lazy { HansProxyApi(hostAddress, TimeoutTypes.LONG) }
 
     private fun prepareV7(type: CalibrationSequenceType): MutableList<Units.FlowUnit.L_S> {
         var current = Units.FlowUnit.L_S(0.1)
@@ -41,7 +43,7 @@ class Logic(private val hostAddress: String) {
 //                    api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
 //                    api.command(HansCommand.reset())
                     api.waveformLoad(HansCommand.waveform(it))
-                    api.command(HansCommand.reset())
+                    longTimeoutApi.command(HansCommand.reset())
                 },
                 exhaleAction = {
                     api.command(HansCommand.run())
@@ -74,7 +76,7 @@ class Logic(private val hostAddress: String) {
                 beforeAction = {
                     if (it.first == 0.10) {
                         api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
-                        api.command(HansCommand.reset())
+                        longTimeoutApi.command(HansCommand.reset())
                     }
                 },
                 exhaleAction = {
@@ -144,7 +146,7 @@ class Logic(private val hostAddress: String) {
                                 else -> "bad response"
                             }
                         wfd = WaveformData(
-                            name = it.name ?: "no name",
+                            name = NameHelper.parse(it.name ?: "no name"),
                             rawSignal = recordedRawSignal,
                             hansCalculatedValues = sendSpirometryResult,
                             timestamp = getTime()
@@ -152,7 +154,7 @@ class Logic(private val hostAddress: String) {
                     }
                 } catch (e: Exception) {
                     api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
-                    api.command(HansCommand.reset())
+                    longTimeoutApi.command(HansCommand.reset())
                     log(e.message ?: e.toString())
                 }
             }
@@ -210,7 +212,7 @@ class Logic(private val hostAddress: String) {
                     }
                 } catch (e: Exception) {
                     api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
-                    api.command(HansCommand.reset())
+                    longTimeoutApi.command(HansCommand.reset())
                     log(e.message ?: e.toString())
                 }
             }
@@ -226,7 +228,7 @@ class Logic(private val hostAddress: String) {
                 volume = Units.VolumeUnit.LITER(it.toDouble()),
                 beforeAction = {
                     api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
-                    api.command(HansCommand.reset())
+                    longTimeoutApi.command(HansCommand.reset())
                 },
                 exhaleAction = {
                     api.waveformLoadRun(HansCommand.waveform("C1-C13_(ISO26782)@C$it"))
@@ -249,7 +251,7 @@ class Logic(private val hostAddress: String) {
             beforeAction = {
                 if (flow == Units.FlowUnit.L_S(0.1)) {
                     api.command(HansCommand.volume(Units.VolumeUnit.LITER(8.0)))
-                    api.command(HansCommand.reset())
+                    longTimeoutApi.command(HansCommand.reset())
                 }
             },
             exhaleAction = {

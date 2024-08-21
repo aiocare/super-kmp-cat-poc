@@ -73,8 +73,8 @@ fun CustomScreen(
                     )
                 }
             }
-        if(viewModel.uiState.deviceName.isNotEmpty())
-            RoundedBox(title = "Connected device", description = viewModel.uiState.deviceName)
+        if(viewModel.uiState.deviceData != null)
+            RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name} battery =${viewModel.uiState.deviceData?.battery}%")
         listOfNotNull(
             viewModel.uiState.url,
             viewModel.uiState.hansSerial,
@@ -93,7 +93,8 @@ fun CustomScreen(
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.initDialogBtn)
             SimpleButtonWithoutMargin(buttonVM = viewModel.uiState.navSuperCatBtn)
         }
-        CustomDataView(viewModel.uiState.customData)
+        CustomDataView(viewModel.uiState.customData, viewModel.uiState.deviceData != null,
+            viewModel.uiState.customData?.selectedWaveForm?.isNotEmpty()==true)
     }
     viewModel.uiState.selectData?.let { selectedData ->
         Box(modifier = Modifier
@@ -141,6 +142,7 @@ fun ErrorDataDialog(errorData: ErrorData?) {
 fun SimpleButtonWithoutMargin(buttonVM: ButtonVM){
     if (buttonVM.visible)
         Button(
+            enabled = buttonVM.enabled,
             onClick = { buttonVM.onClickAction.invoke() },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.padding(start = 4.dp, end = 4.dp)
@@ -150,20 +152,20 @@ fun SimpleButtonWithoutMargin(buttonVM: ButtonVM){
 }
 
 @Composable
-fun CustomDataView(customData: CustomData?) {
+fun CustomDataView(customData: CustomData?, enabled: Boolean, isSelectedData: Boolean) {
     customData?.let {
         Column {
             sequenceOf(
-                customData.selectBtn,
-                customData.resetBtn,
-                customData.executeBtn,
-                customData.executeWithoutRecordingBtn,
+                Pair(customData.selectBtn, false),
+                Pair(customData.resetBtn, true),
+                Pair(customData.executeBtn, true),
+                Pair(customData.executeWithoutRecordingBtn, true),
                 if(customData.results.isNotEmpty())
-                customData.sendBtn else null,
+                Pair(customData.sendBtn, false) else null,
             ).filterNotNull().chunked(2).forEach {
                 Row {
                     it.forEach {
-                        SimpleButtonWithoutMargin(buttonVM = it)
+                        SimpleButtonWithoutMargin(buttonVM = it.first.copy(enabled = enabled && checkShouldBeButtonEnabled(it.second, isSelectedData)))
                     }
                 }
             }
@@ -177,6 +179,14 @@ fun CustomDataView(customData: CustomData?) {
                 RoundedBox(title = "History #${index+1}", description = strings.joinToString("\n"))
             }
         }
+    }
+}
+
+fun checkShouldBeButtonEnabled(isRequired: Boolean, selectedData: Boolean): Boolean {
+    return if(!isRequired)
+        true
+    else {
+        selectedData
     }
 }
 
