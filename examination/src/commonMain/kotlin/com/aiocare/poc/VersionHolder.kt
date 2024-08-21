@@ -1,5 +1,5 @@
 package com.aiocare.poc
 
 object VersionHolder {
-    var version = "3.0.0"
+    var version = "3.0.1"
 }
