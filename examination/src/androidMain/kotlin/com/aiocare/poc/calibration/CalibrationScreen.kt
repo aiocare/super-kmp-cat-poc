@@ -23,10 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.aiocare.SimpleButton
-import com.aiocare.cat.Graph
-import com.aiocare.cortex.cat.calcIndexesToIndexedInputData
 import com.aiocare.util.ButtonVM
-import kotlin.math.roundToInt
 
 fun Int.parseTime(): String {
     val minutes = this / 60
@@ -111,8 +108,6 @@ fun CalibrationScreen(viewModel: CalibrationViewModel) {
             Text(text = "battery = ${viewModel.uiState.deviceInfo.battery}")
             Text(text = "measurement time = ${viewModel.uiState.deviceInfo.measurementTimer.parseTime()}")
             Text(text = viewModel.uiState.infoData)
-            Graph(viewModel.uiState.graphObjects.graphItems.map { it.roundToInt() }
-                .calcIndexesToIndexedInputData())
         }
 
         val scrollState = rememberScrollState()

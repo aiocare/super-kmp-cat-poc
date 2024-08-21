@@ -1,9 +1,7 @@
 package com.aiocare.poc.ktor
 
-import com.aiocare.cortex.cat.hans.Command
-import com.aiocare.cortex.cat.hans.CommandLoader
-import com.aiocare.model.SteadyFlowData
-import com.aiocare.model.WaveformData
+import com.aiocare.supercat.SteadyFlowData
+import com.aiocare.supercat.WaveformData
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -47,10 +45,10 @@ class Api {
         return jsonSerializer.decodeFromString(json)
     }
 
-    suspend fun getHansSequence(item: Item): List<Command> {
-        val dataResponse = httpClient.get(item.url).bodyAsText().split("\n")
-        return CommandLoader().load(dataResponse)
-    }
+//    suspend fun getHansSequence(item: Item): List<HansCommand> {
+//        val dataResponse = httpClient.get(item.url).bodyAsText().split("\n")
+//        return CommandLoader().load(dataResponse)
+//    }
 
     suspend fun postNewRawData(postData: PostData): String {
         return httpClient.post("https://api.dev.aiocare.com/v2/raw-data/recording") {
@@ -81,6 +79,8 @@ class Api {
         val environmentalParamBefore: Env,
         val environmentalParamAfter: Env,
         val zeroFlowData: List<Int>,
+        val zeroFlowDataTime: Long,
+        val zeroFlowDataCount: Int,
         val steadyFlowRawData: List<SteadyFlowData>?,
         val waveformRawData: List<WaveformData>?,
         val type: String,

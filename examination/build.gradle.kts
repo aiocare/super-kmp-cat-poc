@@ -22,7 +22,7 @@ kotlin {
     android {
         compilations.all {
             kotlinOptions {
-                jvmTarget = "1.8"
+                jvmTarget = "17"
             }
         }
     }
@@ -33,7 +33,7 @@ kotlin {
     cocoapods {
         summary = "Some description for the Shared Module"
         homepage = "Link to the Shared Module homepage"
-        version = "2.0.22"
+        version = "3.0.1"
         ios.deploymentTarget = "14.1"
         framework {
             baseName = "examination"
@@ -44,10 +44,12 @@ kotlin {
         val commonMain by getting {
             dependencies {
 
-                implementation("com.aiocare.sdk:spirometer-sdk:+")
+//                implementation("com.aiocare.sdk:spirometer-sdk:+")
                 implementation(project(":super-cat"))
-                implementation("com.aiocare.cortex:cortex:+")
-                implementation("com.aiocare.models:common-models:+")
+                implementation("com.aiocare:bluetooth:0.7.45-rc1")
+                implementation("com.aiocare:sdk:0.7.45-rc1")
+//                implementation("com.aiocare.cortex:cortex:+")
+//                implementation("com.aiocare.models:common-models:+")
                 implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
                 implementation("com.jstarczewski.kstate:kstate-core:0.0.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -98,10 +100,17 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
 }
 dependencies {
 //    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 //    implementation(project(mapOf("path" to ":old-cortex")))
 }

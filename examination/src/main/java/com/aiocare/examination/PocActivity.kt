@@ -5,8 +5,9 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.SideEffect
 import androidx.navigation.compose.rememberNavController
+import com.aiocare.bluetooth.PlatformPermission
+import com.aiocare.bluetooth.di.KoinContext
 import com.aiocare.sdk.AioCareSdk
-import com.aiocare.sdk.permission.Permission
 
 class PocActivity : AppCompatActivity() {
 
@@ -14,7 +15,7 @@ class PocActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SideEffect {
-                AioCareSdk.init(Permission(this))
+                AioCareSdk.init(PlatformPermission(this), KoinContext.DeviceFactoryType.Real)
             }
             val navController = rememberNavController()
             com.aiocare.poc.NavGraph(navController = navController)

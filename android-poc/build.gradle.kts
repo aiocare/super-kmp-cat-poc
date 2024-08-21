@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.aiocare.super_cat_poc"
-    compileSdk = 33
+    compileSdk = 34
 
     buildFeatures {
         buildConfig = true
@@ -16,10 +16,10 @@ android {
 
     defaultConfig {
         applicationId = "com.aiocare.super_cat_poc"
-        minSdk = 24
-        targetSdk = 33
+        minSdk = 26
+        targetSdk = 34
         versionCode = 2
-        versionName = "2.0.22"
+        versionName = "3.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -60,7 +60,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.aiocare.sdk:spirometer-sdk:0.0.8")
     implementation(project(mapOf("path" to ":examination")))
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
@@ -71,7 +70,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("com.jstarczewski.kstate:kstate-core:0.0.3")
-    implementation("com.aiocare.models:common-models:+")
+//    implementation("com.aiocare.models:common-models:+")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

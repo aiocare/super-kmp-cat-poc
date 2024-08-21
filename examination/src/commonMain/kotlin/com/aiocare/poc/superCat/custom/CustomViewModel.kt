@@ -1,7 +1,11 @@
 package com.aiocare.poc.superCat.custom
 
 import com.aiocare.Screens
-import com.aiocare.model.WaveformData
+import com.aiocare.bluetooth.BaseAioCareDevice
+import com.aiocare.bluetooth.device.AioCareDevice
+import com.aiocare.bluetooth.deviceFactory.DeviceFactory
+import com.aiocare.bluetooth.deviceProvider.DeviceProvider
+import com.aiocare.bluetooth.di.inject
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
@@ -16,18 +20,9 @@ import com.aiocare.poc.superCat.InitHolder
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.poc.superCat.RawDataType
 import com.aiocare.poc.superCat.RecordingTypeHelper
-import com.aiocare.sdk.IAioCareDevice
-import com.aiocare.sdk.IAioCareScan
-import com.aiocare.sdk.connecting.getIConnect
-import com.aiocare.sdk.connecting.getIConnectMobile
-import com.aiocare.sdk.scan.getIScan
-import com.aiocare.sdk.services.readBattery
-import com.aiocare.sdk.services.readFlow
-import com.aiocare.sdk.services.readHumidity
-import com.aiocare.sdk.services.readPressure
-import com.aiocare.sdk.services.readTemperature
 import com.aiocare.supercat.NameHelper
 import com.aiocare.supercat.PhoneInfo
+import com.aiocare.supercat.WaveformData
 import com.aiocare.supercat.api.Dir
 import com.aiocare.supercat.api.HansCommand
 import com.aiocare.supercat.api.HansProxyApi
@@ -82,6 +77,8 @@ data class CustomData(
     val info: String = "",
     val results: MutableList<CustomViewModel.SequenceResultData> = mutableListOf(),
     val zeroFlow: List<Int>? = null,
+    val zeroFlowDataTime: Long? = null,
+    val zeroFlowDataCount: Int? = null,
     val before: EnvironmentalData? = null,
     val beforeTime: Long? = null,
     val currentEnvData: String = "",
@@ -94,21 +91,24 @@ class CustomViewModel(
 
     private var scanJob: Job? = null
     private var actionJob: Job? = null
-    private var device: IAioCareDevice? = null
+    private var device: AioCareDevice? = null
     private var operator: String = "not_selected"
+
+    private val deviceProvider = inject<DeviceProvider>()
+    private val deviceFactory = inject<DeviceFactory>()
 
 
     private fun startSearching() {
         scanJob = viewModelScope.launch {
-            getIScan().start()?.collect { scan ->
+            deviceProvider.devices.collect { scan ->
                 updateUiState {
                     it.copy(
                         disconnectBtn = disconnectBtn.copy(visible = false),
                         devices = devices.plus(DeviceItem(
-                            text = scan.getName(),
+                            text = scan.name,
                             aioCareScan = scan,
                             onDeviceClicked = { scanClicked(scan) }
-                        )).distinctBy { item -> item.aioCareScan.getName() }
+                        )).distinctBy { item -> item.aioCareScan.name }
                     )
                 }
             }
@@ -263,7 +263,7 @@ class CustomViewModel(
 
     private fun startObservingState() {
         viewModelScope.launch {
-            getIConnect().getConnectedFlow().collect {
+            device?.observeConnectionStateCommand?.values?.collect {
                 if (!it) {
                     safeCancelJob()
                     device = null
@@ -279,17 +279,17 @@ class CustomViewModel(
         }
     }
 
-    private fun scanClicked(scan: IAioCareScan) {
+    private fun scanClicked(scan: BaseAioCareDevice) {
         viewModelScope.launch {
             loading(true)
-            device = getIConnectMobile().connectMobile(this, scan)
+            device = deviceFactory.create(scan)
             scanJob?.cancelAndJoin()
             startObservingState()
             setupCustomData()
-            val battery = device?.readBattery()?:0
+            val battery = device?.readBatteryCommand?.execute()?:0
             updateUiState {
                 copy(
-                    deviceData = DeviceData(scan.getName(), battery),
+                    deviceData = DeviceData(scan.name, battery),
                     devices = listOf(),
                     disconnectBtn = ButtonVM(true, text = "disconnected") {
                         disconnect()
@@ -343,15 +343,15 @@ class CustomViewModel(
                 withTimeout(5000) {
                     delay(400)
                     if (temperature == null) {
-                        temperature = device?.readTemperature()
+                        temperature = device?.readSingleTemperatureCommand?.execute()?.toFloat()
                         updateProgress("temperature=$temperature")
                     }
                     if (pressure == null) {
-                        pressure = device?.readPressure()
+                        pressure = device?.readPressureCommand?.execute()?.toFloat()
                         updateProgress("pressure=$pressure")
                     }
                     if (humidity == null) {
-                        humidity = device?.readHumidity()
+                        humidity = device?.readHumidityCommand?.execute()?.toFloat()
                         updateProgress("humidity=$humidity")
                     }
                 }
@@ -376,9 +376,10 @@ class CustomViewModel(
         if (uiState.customData?.zeroFlow == null) {
             updateProgress("zeroFlow....")
             val out = mutableListOf<Int>()
+            val startTime = Clock.System.now().toEpochMilliseconds()
             val result = coroutineScope {
                 val job = launch {
-                    device!!.readFlow().collect {
+                    device!!.readFlowCommand.values.collect {
                         it.forEach {
                             out.add(it)
                         }
@@ -390,7 +391,12 @@ class CustomViewModel(
                 ErrorChecker.checkZeroFlowAndThrow(out)
                 return@coroutineScope out
             }
-            updateUiState { copy(customData = uiState.customData?.copy(zeroFlow = result)) }
+            val finishTime = Clock.System.now().toEpochMilliseconds()
+            updateUiState { copy(customData = uiState.customData?.copy(
+                zeroFlow = result,
+                zeroFlowDataCount = result.size,
+                zeroFlowDataTime = finishTime - startTime
+            )) }
         }
     }
 
@@ -417,7 +423,7 @@ class CustomViewModel(
         updateProgress("humidity = ${(humidity as Response.TEXT).parse()}")
         return coroutineScope {
             recordJob = launch {
-                device?.readFlow()?.collect {
+                device?.readFlowCommand?.values?.collect {
                     it.forEach {
                         recordedRawSignal.add(it)
                     }
@@ -526,6 +532,8 @@ class CustomViewModel(
                 timestamp = Clock.System.now().toEpochMilliseconds()
             ),
             zeroFlowData = uiState.customData!!.zeroFlow!!,
+            zeroFlowDataTime = uiState.customData!!.zeroFlowDataTime!!,
+            zeroFlowDataCount = uiState.customData!!.zeroFlowDataCount!!,
             steadyFlowRawData = null,
             waveformRawData = uiState.customData!!.results.map {
                 WaveformData(
@@ -637,7 +645,7 @@ class CustomViewModel(
     }
 
     private suspend fun updateBattery(){
-        device?.readBattery()?.let {  bat ->
+        device?.readBatteryCommand?.execute()?.let {  bat ->
             updateUiState {
                 copy(deviceData = deviceData?.copy(battery = bat))
             }
@@ -648,7 +656,7 @@ class CustomViewModel(
         loading(true)
         viewModelScope.launch {
             safeCancelJob()
-            getIConnect().disconnect()
+            device?.disconnectCommand?.execute()
             startSearching()
             loading(false)
             updateUiState {

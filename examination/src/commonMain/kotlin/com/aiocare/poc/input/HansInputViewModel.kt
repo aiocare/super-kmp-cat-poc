@@ -1,14 +1,8 @@
 package com.aiocare.poc.input
 
-import com.aiocare.Screens
-import com.aiocare.cortex.cat.Entry
-import com.aiocare.cortex.cat.IndexedInputData
-import com.aiocare.cortex.cat.hans.Command
-import com.aiocare.cortex.cat.hans.FlowType
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
-import com.aiocare.poc.Holder
 import com.aiocare.poc.ktor.Api
 import com.aiocare.util.ButtonVM
 import kotlinx.coroutines.launch
@@ -19,7 +13,7 @@ data class HansInputUiState(
     val details: String? = null,
     val refreshing: Boolean = false,
     val nextButton: ButtonVM = ButtonVM(visible = false, text = "next"),
-    val indexedInputData: IndexedInputData = IndexedInputData(listOf())
+//    val indexedInputData: IndexedInputData = IndexedInputData(listOf())
 )
 
 
@@ -65,31 +59,31 @@ class HansInputViewModel(
 
     private fun downloadAndSelect(item: Api.Item) {
         viewModelScope.launch {
-            val data = api.getHansSequence(item)
-            Holder.selectedSequence = data
-            val exhale = data.filter { it is Command.Flow && it.type == FlowType.Exhale }
-            val inhale = data.filter { it is Command.Flow && it.type == FlowType.Inhale }
-
-            updateUiState {
-                it.copy(
-                    details = "selected:\ninhales = ${inhale.size}\nexhales = ${exhale.size}",
-                    nextButton = nextButton.copy(visible = true, onClickAction = {
-                        navigateCallback.invoke(Screens.Calibration.route)
-                    }),
-                    indexedInputData = data.toIndexedInputData()
-                )
-            }
+//            val data = api.getHansSequence(item)
+//            Holder.selectedSequence = data
+//            val exhale = data.filter { it is Command.Flow && it.type == FlowType.Exhale }
+//            val inhale = data.filter { it is Command.Flow && it.type == FlowType.Inhale }
+//
+//            updateUiState {
+//                it.copy(
+//                    details = "selected:\ninhales = ${inhale.size}\nexhales = ${exhale.size}",
+//                    nextButton = nextButton.copy(visible = true, onClickAction = {
+//                        navigateCallback.invoke(Screens.Calibration.route)
+//                    }),
+//                    indexedInputData = data.toIndexedInputData()
+//                )
+//            }
         }
     }
 }
 
-fun List<Command>.toIndexedInputData(): IndexedInputData {
-    return IndexedInputData(mapIndexed { index, command ->
-        if (command is Command.Flow) {
-            when (command.type) {
-                FlowType.Exhale -> Entry(index, (command.flow * 100).toInt())
-                FlowType.Inhale -> Entry(index, (command.flow * -100).toInt())
-            }
-        } else Entry(index, 0)
-    })
-}
+//fun List<Command>.toIndexedInputData(): IndexedInputData {
+//    return IndexedInputData(mapIndexed { index, command ->
+//        if (command is Command.Flow) {
+//            when (command.type) {
+//                FlowType.Exhale -> Entry(index, (command.flow * 100).toInt())
+//                FlowType.Inhale -> Entry(index, (command.flow * -100).toInt())
+//            }
+//        } else Entry(index, 0)
+//    })
+//}

@@ -1,6 +1,6 @@
 package com.aiocare.supercat.api
 
-import com.aiocare.model.Units
+import com.aiocare.units.Units
 
 class HansCommand private constructor(private val rawCommand: String) {
     val command: String
@@ -22,11 +22,11 @@ class HansCommand private constructor(private val rawCommand: String) {
 
         fun readHumidity() = HansCommand("SendData RH")
 
-        fun volume(volume: Units.VolumeUnit.LITER) = HansCommand("Volume ${volume.value}")
+        fun volume(volume: Units.VolumeUnit.Liter) = HansCommand("Volume ${volume.value}")
 
         fun flow(
-            flow: Units.FlowUnit.L_S,
-            volume: Units.VolumeUnit.LITER,
+            flow: Units.FlowUnit.Ls,
+            volume: Units.VolumeUnit.Liter,
             type: Type
         ): HansCommand {
             return HansCommand("Flow_${flow.value},_${volume.value},_${type.name}")
