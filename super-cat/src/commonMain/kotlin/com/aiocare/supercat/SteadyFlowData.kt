@@ -16,6 +16,8 @@ data class SteadyFlowData(
     val exhaleRawSignalTime: Long,
     val inhaleRawSignalCount: Int,
     val inhaleRawSignalTime: Long,
+    val exhaleRawSignalControlCount: Int,
+    val inhaleRawSignalControlCount: Int,
     val createdAt: String = Clock.System.now().epochSeconds.toString()
 )
 

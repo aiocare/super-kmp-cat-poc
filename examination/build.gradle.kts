@@ -46,8 +46,8 @@ kotlin {
 
 //                implementation("com.aiocare.sdk:spirometer-sdk:+")
                 implementation(project(":super-cat"))
-                implementation("com.aiocare:bluetooth:0.7.45-rc1")
-                implementation("com.aiocare:sdk:0.7.45-rc1")
+                implementation("com.aiocare:bluetooth:0.7.46")
+                implementation("com.aiocare:sdk:0.7.46")
 //                implementation("com.aiocare.cortex:cortex:+")
 //                implementation("com.aiocare.models:common-models:+")
                 implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
