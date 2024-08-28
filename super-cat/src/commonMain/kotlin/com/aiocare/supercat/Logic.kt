@@ -1,5 +1,6 @@
 package com.aiocare.supercat
 
+import com.aiocare.bluetooth.command.FlowControlData
 import com.aiocare.bluetooth.device.AioCareDevice
 import com.aiocare.list.toIntList
 import com.aiocare.supercat.api.HansCommand
@@ -7,6 +8,7 @@ import com.aiocare.supercat.api.HansProxyApi
 import com.aiocare.supercat.api.Response
 import com.aiocare.supercat.api.TimeoutTypes
 import com.aiocare.units.Units
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
@@ -39,8 +41,8 @@ class Logic(private val hostAddress: String) {
                 flow = Units.FlowUnit.Ls(0.0),
                 volume = Units.VolumeUnit.Liter(0.0),
                 beforeAction = {
-//                    api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
-//                    api.command(HansCommand.reset())
+                    api.command(HansCommand.volume(Units.VolumeUnit.Liter(8.0)))
+                    api.command(HansCommand.reset())
                     api.waveformLoad(HansCommand.waveform(it))
                     longTimeoutApi.command(HansCommand.reset())
                 },
@@ -180,28 +182,42 @@ class Logic(private val hostAddress: String) {
                     log("before ${it.flow.value}")
                     it.beforeAction.invoke()
                     val exhaleStartTime = Clock.System.now().toEpochMilliseconds()
+                    val readFlowExhale = device.readControlFlowCommand
                     coroutineScope {
+                        val deferredExhale = CompletableDeferred<Int>()
                         recordJob = launch {
-                            device.readFlowCommand.values.collect {
-                                it.forEach {
-                                    recordedRawSignal.add(it)
+                            readFlowExhale.values.collect {
+                                when (it) {
+                                    is FlowControlData.Control -> deferredExhale.complete(it.amount)
+                                    is FlowControlData.Data -> it.list.forEach {
+                                        recordedRawSignal.add(
+                                            it
+                                        )
+                                    }
                                 }
                             }
                         }
                         log("exhale ${it.flow.value}")
                         it.exhaleAction.invoke()
+                        readFlowExhale.cancelStream()
+                        val exhaleCalculated = deferredExhale.await()
                         recordJob?.cancelAndJoin()
+                        val deferredInhale = CompletableDeferred<Int>()
+                        val readFlowInhale = device.readControlFlowCommand
                         val exhaleFinishTime = Clock.System.now().toEpochMilliseconds()
                         coroutineScope {
                             recordJob = launch {
-                                device.readFlowCommand.values.collect {
-                                    it.forEach {
-                                        recordedInhaleRawSignal.add(it)
+                                readFlowInhale.values.collect {
+                                    when(it){
+                                        is FlowControlData.Control -> deferredInhale.complete(it.amount)
+                                        is FlowControlData.Data -> it.list.forEach { recordedInhaleRawSignal.add(it) }
                                     }
                                 }
                             }
                             log("inhale ${it.flow.value}")
                             it.inhaleAction.invoke()
+                            readFlowInhale.cancelStream()
+                            val inhaleCalculated = deferredInhale.await()
                             recordJob?.cancelAndJoin()
                             val inhaleFinishTime = Clock.System.now().toEpochMilliseconds()
                             sfd = SteadyFlowData(
@@ -212,7 +228,9 @@ class Logic(private val hostAddress: String) {
                                 exhaleRawSignalTime =exhaleFinishTime - exhaleStartTime,
                                 exhaleRawSignalCount = recordedRawSignal.size,
                                 inhaleRawSignalTime =inhaleFinishTime - exhaleFinishTime,
-                                inhaleRawSignalCount = recordedInhaleRawSignal.size
+                                inhaleRawSignalCount = recordedInhaleRawSignal.size,
+                                exhaleRawSignalControlCount = exhaleCalculated,
+                                inhaleRawSignalControlCount = inhaleCalculated
                             )
                         }
                     }

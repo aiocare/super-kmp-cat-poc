@@ -651,6 +651,9 @@ class SuperCatViewModel(
 
         updateProgress("try send")
 
+        val totalCount: Int = steadyFlowRawData?.map { it.exhaleRawSignalControlCount + it.inhaleRawSignalControlCount }?.sum()?:0
+        val totalRawSignal : Int = steadyFlowRawData?.map { it.exhaleRawSignal.size + it.inhaleRawSignal.size }?.sum()?:0
+
         delay(1000)
         val request = Api.PostData(
             environment = Api.Environment(
@@ -682,7 +685,11 @@ class SuperCatViewModel(
             waveformRawData = waveformRawData,
             type = name,
             rawDataType = rawDataType.name,
-            notes = uiState.note?.value ?: ""
+            notes = uiState.note?.value ?: "",
+            totalRawSignalControlCount = totalCount,
+            totalRawSignalCount = totalRawSignal,
+            overallSampleLoss =  totalCount - totalRawSignal,
+            overallPercentageLoss = 100 - (((totalRawSignal).toDouble() / totalCount) * 100)
         )
         trySendToApi(request)
     }
