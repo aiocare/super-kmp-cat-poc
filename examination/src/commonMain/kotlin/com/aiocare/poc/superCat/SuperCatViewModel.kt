@@ -653,7 +653,8 @@ class SuperCatViewModel(
 
         val totalCount: Int = steadyFlowRawData?.map { it.exhaleRawSignalControlCount + it.inhaleRawSignalControlCount }?.sum()?:0
         val totalRawSignal : Int = steadyFlowRawData?.map { it.exhaleRawSignal.size + it.inhaleRawSignal.size }?.sum()?:0
-
+        val percentageLoss = if(totalCount == 0) 0.0 else
+            100 - (((totalRawSignal).toDouble() / totalCount) * 100)
         delay(1000)
         val request = Api.PostData(
             environment = Api.Environment(
@@ -689,7 +690,7 @@ class SuperCatViewModel(
             totalRawSignalControlCount = totalCount,
             totalRawSignalCount = totalRawSignal,
             overallSampleLoss =  totalCount - totalRawSignal,
-            overallPercentageLoss = 100 - (((totalRawSignal).toDouble() / totalCount) * 100)
+            overallPercentageLoss = percentageLoss
         )
         trySendToApi(request)
     }
