@@ -26,7 +26,9 @@ class Api {
         install(Logging) {
             logger = object : io.ktor.client.plugins.logging.Logger {
                 override fun log(message: String) {
-                    println(message)
+                    message.chunked(100).forEach {
+                        println(it)
+                    }
                 }
             }
             level = LogLevel.ALL
