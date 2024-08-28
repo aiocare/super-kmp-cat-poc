@@ -545,7 +545,11 @@ class CustomViewModel(
             },
             type = RecordingTypeHelper.findTypeBasedOnNames(uiState.customData!!.results.map { it.name }).name,
             rawDataType = RawDataType.WAVEFORM.name,
-            notes = uiState.note?.value ?: ""
+            notes = uiState.note?.value ?: "",
+            totalRawSignalControlCount = 0,
+            totalRawSignalCount = 0,
+            overallSampleLoss =  0,
+            overallPercentageLoss = 0.0
         )
         trySendToApi(request)
     }
