@@ -205,7 +205,6 @@ class Logic(private val hostAddress: String) {
                         val deferredInhale = CompletableDeferred<Int>()
                         val readFlowInhale = device.readControlFlowCommand
                         val exhaleFinishTime = Clock.System.now().toEpochMilliseconds()
-                        println("--->>>>> ${exhaleFinishTime - exhaleStartTime}")
                         coroutineScope {
                             recordJob = launch {
                                 readFlowInhale.values.collect {
