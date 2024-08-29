@@ -277,205 +277,216 @@ class SuperCatViewModel(
     }
 
     private fun scanClicked(scan: BaseAioCareDevice) {
-        viewModelScope.launch {
-            updateLoader(true)
-            device = deviceFactory.create(scan)
-            scanJob?.cancelAndJoin()
-            startObservingState()
-            val battery = device?.readBatteryCommand?.execute()?:0
-            updateUiState {
-                copy(
-                    deviceData = DeviceData(scan.name, battery),
-                    devices = listOf(),
-                    cancelBtn = cancelBtn.copy(
-                        visible = true,
-                        onClickAction = {
-                            timerJob?.cancel()
-                            actionJob?.cancel()
-                        }
-                    ),
-                    examBtn = examBtn.copy(
-                        visible = true,
-                        onClickAction = {
-                            updateUiState {
-                                copy(examDialogData = ExamDialogData(
-                                    listOf(
-                                        ButtonVM(true, "calibration seq v7") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(
-                                                                true,
-                                                                "${it}"
-                                                            ) {
-                                                                v7(
-                                                                    CalibrationSequenceType.OLD_0_16,
-                                                                    it
-                                                                )
+            viewModelScope.launch {
+                try{
+                updateLoader(true)
+                device = deviceFactory.create(scan)
+                scanJob?.cancelAndJoin()
+                startObservingState()
+                val battery = device?.readBatteryCommand?.execute()?:0
+                updateUiState {
+                    copy(
+                        deviceData = DeviceData(scan.name, battery),
+                        devices = listOf(),
+                        cancelBtn = cancelBtn.copy(
+                            visible = true,
+                            onClickAction = {
+                                timerJob?.cancel()
+                                actionJob?.cancel()
+                            }
+                        ),
+                        examBtn = examBtn.copy(
+                            visible = true,
+                            onClickAction = {
+                                updateUiState {
+                                    copy(examDialogData = ExamDialogData(
+                                        listOf(
+                                            ButtonVM(true, "calibration seq v7") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(
+                                                                    true,
+                                                                    "${it}"
+                                                                ) {
+                                                                    v7(
+                                                                        CalibrationSequenceType.OLD_0_16,
+                                                                        it
+                                                                    )
+                                                                }
                                                             }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
                                                         }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
-                                            }
-                                        },
-                                        ButtonVM(true, "calibration seq v5") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(
-                                                                true,
-                                                                "${it}"
-                                                            ) {
-                                                                v5(it)
+                                                    )
+                                                }
+                                            },
+                                            ButtonVM(true, "calibration seq v5") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(
+                                                                    true,
+                                                                    "${it}"
+                                                                ) {
+                                                                    v5(it)
+                                                                }
                                                             }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
                                                         }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
-                                            }
-                                        },
-                                        ButtonVM(true, "calibration seq v7 17l/s") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(
-                                                                true,
-                                                                "${it}"
-                                                            ) {
-                                                                v7(
-                                                                    CalibrationSequenceType.NEW_0_17,
-                                                                    it
-                                                                )
+                                                    )
+                                                }
+                                            },
+                                            ButtonVM(true, "calibration seq v7 17l/s") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(
+                                                                    true,
+                                                                    "${it}"
+                                                                ) {
+                                                                    v7(
+                                                                        CalibrationSequenceType.NEW_0_17,
+                                                                        it
+                                                                    )
+                                                                }
                                                             }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
                                                         }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
-                                            }
-                                        },
-                                        ButtonVM(true, "ISO c1-c11") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(
-                                                                true,
-                                                                "${it}"
-                                                            ) { c1c11(it) }
-                                                        }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
-                                            }
-                                        },
-                                        ButtonVM(true, "PEF(Profile A+B)") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(true, "${it}") {
-                                                                pef(standardPef, it)
+                                                    )
+                                                }
+                                            },
+                                            ButtonVM(true, "ISO c1-c11") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(
+                                                                    true,
+                                                                    "${it}"
+                                                                ) { c1c11(it) }
                                                             }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
                                                         }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
-                                            }
-                                        }, ButtonVM(true, "PEF(Profile A)") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(true, "${it}") {
-                                                                pef(pefA, it)
+                                                    )
+                                                }
+                                            },
+                                            ButtonVM(true, "PEF(Profile A+B)") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(true, "${it}") {
+                                                                    pef(standardPef, it)
+                                                                }
                                                             }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
                                                         }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
-                                            }
-                                        },
-                                        ButtonVM(true, "PEF(Profile B)") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(true, "${it}") {
-                                                                pef(pefB, it)
+                                                    )
+                                                }
+                                            }, ButtonVM(true, "PEF(Profile A)") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(true, "${it}") {
+                                                                    pef(pefA, it)
+                                                                }
                                                             }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
                                                         }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
-                                            }
-                                        },
-                                        ButtonVM(true, "PEF(Profile V Adjusted)") {
-                                            updateUiState {
-                                                copy(
-                                                    examDialogData = null,
-                                                    repeatDialog = RepeatDialogData(
-                                                        (1..5).map {
-                                                            ButtonVM(true, "${it}") {
-                                                                pef(pefBAdj, it)
+                                                    )
+                                                }
+                                            },
+                                            ButtonVM(true, "PEF(Profile B)") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(true, "${it}") {
+                                                                    pef(pefB, it)
+                                                                }
                                                             }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
                                                         }
-                                                    ) {
-                                                        updateUiState { copy(repeatDialog = null) }
-                                                    }
-                                                )
+                                                    )
+                                                }
+                                            },
+                                            ButtonVM(true, "PEF(Profile V Adjusted)") {
+                                                updateUiState {
+                                                    copy(
+                                                        examDialogData = null,
+                                                        repeatDialog = RepeatDialogData(
+                                                            (1..5).map {
+                                                                ButtonVM(true, "${it}") {
+                                                                    pef(pefBAdj, it)
+                                                                }
+                                                            }
+                                                        ) {
+                                                            updateUiState { copy(repeatDialog = null) }
+                                                        }
+                                                    )
+                                                }
                                             }
+                                        )
+                                    ) {
+                                        updateUiState {
+                                            copy(examDialogData = null)
                                         }
-                                    )
-                                ) {
-                                    updateUiState {
-                                        copy(examDialogData = null)
-                                    }
-                                })
+                                    })
+                                }
                             }
-                        }
-                    ),
-                    envBtn = envBtn.copy(
-                        visible = true,
-                        onClickAction = {
-                            viewModelScope.launch {
-                                loadEnv()
-                            }
-                        }),
-                    envAfterBtn = envAfterBtn.copy(
-                        visible = true,
-                        onClickAction = {
-                            viewModelScope.launch {
-                                envAfter()
-                            }
-                        }),
-                    disconnectBtn = disconnectBtn.copy(
-                        visible = true,
-                        onClickAction = {
-                            viewModelScope.launch {
-                                disconnect()
-                            }
-                        }),
-                )
-            }
-            updateLoader(false)
+                        ),
+                        envBtn = envBtn.copy(
+                            visible = true,
+                            onClickAction = {
+                                viewModelScope.launch {
+                                    loadEnv()
+                                }
+                            }),
+                        envAfterBtn = envAfterBtn.copy(
+                            visible = true,
+                            onClickAction = {
+                                viewModelScope.launch {
+                                    envAfter()
+                                }
+                            }),
+                        disconnectBtn = disconnectBtn.copy(
+                            visible = true,
+                            onClickAction = {
+                                viewModelScope.launch {
+                                    disconnect()
+                                }
+                            }),
+                    )
+                }
+                updateLoader(false)
+            }catch (e: Exception){
+                updateLoader(false)
+                    updateUiState {
+                        copy(
+                            zeroFlowDialog = ZeroFlowDialogData("${e::class.simpleName} ${e.message}") {
+                                updateUiState { copy(zeroFlowDialog = null) }
+                            },
+                        )
+                    }
+                }
         }
     }
 
