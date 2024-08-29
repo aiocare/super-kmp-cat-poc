@@ -33,7 +33,7 @@ kotlin {
     cocoapods {
         summary = "Some description for the Shared Module"
         homepage = "Link to the Shared Module homepage"
-        version = "3.0.4"
+        version = "3.0.5"
         ios.deploymentTarget = "14.1"
         framework {
             baseName = "examination"
@@ -46,8 +46,8 @@ kotlin {
 
 //                implementation("com.aiocare.sdk:spirometer-sdk:+")
                 implementation(project(":super-cat"))
-                implementation("com.aiocare:bluetooth:0.7.46")
-                implementation("com.aiocare:sdk:0.7.46")
+                implementation("com.aiocare:bluetooth:0.7.46-extended_delay")
+                implementation("com.aiocare:sdk:0.7.46-extended_delay")
 //                implementation("com.aiocare.cortex:cortex:+")
 //                implementation("com.aiocare.models:common-models:+")
                 implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
