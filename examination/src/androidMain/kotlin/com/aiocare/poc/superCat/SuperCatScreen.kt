@@ -62,7 +62,9 @@ fun SuperCatScreen(viewModel: SuperCatViewModel, navController: NavController) {
         viewModel.playingStarted()
     }
 
-    Column {
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState())
+    ) {
         if (viewModel.uiState.devices.isNotEmpty())
             Column(
                 modifier = Modifier

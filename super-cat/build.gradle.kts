@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.aiocare.supercat"
-version = "3.0.4"
+version = "3.0.6"
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 kotlin {
@@ -67,9 +67,9 @@ kotlin {
         val commonMain by getting {
             dependencies {
 //                implementation("com.aiocare:sdk:0.7.44")
-                implementation("com.aiocare:base-shared-data:0.7.46")
-                implementation("com.aiocare:bluetooth:0.7.46")
-                implementation("com.aiocare:command:0.7.46")
+                implementation("com.aiocare:base-shared-data:0.7.46-extended_delay")
+                implementation("com.aiocare:bluetooth:0.7.46-extended_delay")
+                implementation("com.aiocare:command:0.7.46-extended_delay")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 //                implementation("com.aiocare.sdk:spirometer-sdk:0.0.8")
 //                implementation("com.aiocare.models:common-models:+")
