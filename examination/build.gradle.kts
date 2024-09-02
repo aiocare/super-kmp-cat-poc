@@ -56,7 +56,7 @@ kotlin {
                 implementation("com.patrykandpatrick.vico:core:1.8.0")
                 implementation("com.patrykandpatrick.vico:compose:1.8.0")
                 implementation(kotlin("reflect"))
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
                 implementation("io.ktor:ktor-client-core:2.3.5")
                 implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
@@ -110,7 +110,7 @@ android {
 dependencies {
 //    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 //    implementation(project(mapOf("path" to ":old-cortex")))
 }
