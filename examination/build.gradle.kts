@@ -54,7 +54,7 @@ kotlin {
                 implementation("com.jstarczewski.kstate:kstate-core:0.0.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("com.patrykandpatrick.vico:core:1.8.0")
-                implementation("com.patrykandpatrick.vico:compose:1.8.0")
+                implementation("com.patrykandpatrick.vico:compose:1.15.0")
                 implementation(kotlin("reflect"))
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
                 implementation("io.ktor:ktor-client-core:2.3.5")
