@@ -73,7 +73,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 //                implementation("com.aiocare.sdk:spirometer-sdk:0.0.8")
 //                implementation("com.aiocare.models:common-models:+")
-                implementation("com.juul.kable:core:0.25.1")
+                implementation("com.juul.kable:core:0.32.0")
                 implementation("com.squareup.okio:okio:3.5.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
