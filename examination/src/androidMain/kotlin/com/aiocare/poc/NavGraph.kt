@@ -7,9 +7,11 @@ import androidx.navigation.compose.composable
 import com.aiocare.Screens
 import com.aiocare.cat.Cat
 import com.aiocare.custom.CustomScreen
+import com.aiocare.flow.FlowScreen
 import com.aiocare.mvvm.createDefaultConfig
 import com.aiocare.poc.calibration.CalibrationScreen
 import com.aiocare.poc.calibration.CalibrationViewModel
+import com.aiocare.poc.flow.FlowViewModel
 import com.aiocare.poc.input.HansInputScreen
 import com.aiocare.poc.input.HansInputViewModel
 import com.aiocare.poc.intro.IntroScreen
@@ -42,6 +44,12 @@ fun NavGraph (navController: NavHostController){
                 navController = navController
             )
         }
+        composable(route = Screens.Flow.route) {
+            FlowScreen(
+                viewModel = flowCatVM,
+                navController = navController
+            )
+        }
         composable(route = Screens.SearchDevice.route) {
             SearchDeviceScreen(viewModel = SearchDeviceViewModel(createDefaultConfig()))
         }
@@ -67,3 +75,4 @@ fun NavGraph (navController: NavHostController){
 
 val superCatVM by lazy { SuperCatViewModel(createDefaultConfig()) }
 val customCatVM by lazy { CustomViewModel(createDefaultConfig()) }
+val flowCatVM by lazy { FlowViewModel(createDefaultConfig()) }

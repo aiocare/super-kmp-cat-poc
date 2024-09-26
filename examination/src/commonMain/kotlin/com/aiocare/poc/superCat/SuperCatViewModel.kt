@@ -76,6 +76,7 @@ data class SuperCatUiState(
     val zeroFlowDialog: ZeroFlowDialogData? = null,
     val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {},
     val navCustomBtn: ButtonVM = ButtonVM(false, "Nav to custom") {},
+    val navFlowBtn: ButtonVM = ButtonVM(false, "Nav to flow") {},
     val deviceData: DeviceData? = null
 )
 
@@ -184,6 +185,13 @@ class SuperCatViewModel(
                     onClickAction = {
                         disconnect()
                         navigate(Screens.Custom.route)
+                    }
+                ),
+                navFlowBtn = uiState.navFlowBtn.copy(
+                    visible = true,
+                    onClickAction = {
+                        disconnect()
+                        navigate(Screens.Flow.route)
                     }
                 )
             )
