@@ -15,6 +15,7 @@ import com.aiocare.poc.calibration.EnvironmentalData
 import com.aiocare.poc.ktor.Api
 import com.aiocare.poc.searchDevice.DeviceItem
 import com.aiocare.poc.superCat.ErrorChecker
+import com.aiocare.poc.superCat.InitHolder
 import com.aiocare.poc.superCat.InputData
 import com.aiocare.poc.superCat.SuperCatViewModel.ZeroFlowData
 import com.aiocare.poc.superCat.custom.DeviceData
@@ -39,7 +40,7 @@ data class CalibrationUiState(
     val settingsBtn: ButtonVM = ButtonVM(visible = false, text = "settings"),
     val dialogData: Pair<Boolean, List<ButtonVM>>? = null,
     val selectedOperator: String? = null,
-    val note: InputData? = null,
+    val note: InputData = InputData("", "note", {}),
     val devices: List<DeviceItem> = listOf(),
     val deviceInfo: DeviceInfo = DeviceInfo(),
     val deviceData: DeviceData? = null,
@@ -67,6 +68,10 @@ class FlowViewModel(config: Config) :
     fun init(navigate: (String) -> Unit) {
         updateUiState {
             copy(
+                note = note.copy(onValueChanged = { val newValue = it
+                    updateUiState { copy(note = note.copy(newValue)) }
+                }),
+                selectedOperator = InitHolder.operator,
                 navigateToSuperCatBtn = navigateToSuperCatBtn.copy(true) {
                     disconnect()
                     navigate.invoke(Screens.SuperCat.route)
@@ -74,9 +79,12 @@ class FlowViewModel(config: Config) :
                 dialogData = Pair(false, listOf("Piotr", "Milena", "Darek", "Szymon").map {
                     ButtonVM(true, text = it, onClickAction = {
                         val item = it
+                        InitHolder.operator = it
                         updateUiState {
-                            copy(selectedOperator = item,
-                                dialogData = dialogData?.copy(false))
+                            copy(
+                                selectedOperator = item,
+                                dialogData = dialogData?.copy(false)
+                            )
                         }
                     })
                 }),
@@ -88,7 +96,7 @@ class FlowViewModel(config: Config) :
         startSearching()
     }
 
-    fun hideDialog(){
+    fun hideDialog() {
         updateUiState {
             copy(dialogData = dialogData?.copy(false))
         }
@@ -207,7 +215,7 @@ class FlowViewModel(config: Config) :
                             }
                         ),
                         stopBtn = stopBtn.copy(
-                            visible = true,
+                            visible = false,
                             onClickAction = {
                                 stop()
                             }
@@ -232,6 +240,13 @@ class FlowViewModel(config: Config) :
     }
 
     private fun start() {
+        updateUiState {
+            copy(
+                startBtn = startBtn.copy(false),
+                stopBtn = stopBtn.copy(true),
+                sendBtn = sendBtn.copy(false)
+            )
+        }
         timerJob?.cancel()
         timerJob = GlobalScope.launch {
             updateUiState {
@@ -295,6 +310,13 @@ class FlowViewModel(config: Config) :
     }
 
     private fun stop() {
+        updateUiState {
+            copy(
+                startBtn = startBtn.copy(true),
+                stopBtn = stopBtn.copy(false),
+                sendBtn = sendBtn.copy(true)
+            )
+        }
         timerJob?.cancel()
         actionJob?.cancel()
         updateUiState {
@@ -338,7 +360,7 @@ class FlowViewModel(config: Config) :
                 hansCalibrationId = null,
                 appVersion = VersionHolder.version,
                 spirometerDeviceSerial = uiState.deviceData?.name ?: "",
-                operator = "test",
+                operator = InitHolder.operator ?: "",
                 date = calculateDate()
             ),
             environmentalParamBefore = Api.Env(
@@ -361,7 +383,7 @@ class FlowViewModel(config: Config) :
             flowRawData = Api.FlowRawData(rawSignal.flatMap { it.toList() }),
             type = "FLOW",
             rawDataType = "FLOW",
-            notes = uiState.note?.value ?: "",
+            notes = uiState.note.value,
             totalRawSignalControlCount = null,
             totalRawSignalCount = null,
             overallSampleLoss = null,

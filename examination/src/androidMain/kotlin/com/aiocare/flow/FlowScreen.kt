@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
@@ -44,11 +47,11 @@ fun FlowScreen(
             Row {
                 SimpleButton(
                     modifier = Modifier,
-                    buttonVM = viewModel.uiState.navigateToSuperCatBtn
+                    buttonVM = viewModel.uiState.settingsBtn
                 )
                 SimpleButton(
                     modifier = Modifier,
-                    buttonVM = viewModel.uiState.settingsBtn
+                    buttonVM = viewModel.uiState.navigateToSuperCatBtn
                 )
             }
             if(viewModel.uiState.deviceData != null)
@@ -83,7 +86,13 @@ fun FlowScreen(
                 modifier = Modifier.fillMaxWidth(),
                 buttonVM = viewModel.uiState.sendBtn
             )
-            Text(text = "operator= ${viewModel.uiState.selectedOperator}")
+            TextField(
+                label = { Text(viewModel.uiState.note.description) },
+                modifier = Modifier.fillMaxWidth(),
+                value = viewModel.uiState.note.value,
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+                onValueChange = { viewModel.uiState.note.onValueChanged.invoke(it) })
+            Text(text = "operator= ${viewModel.uiState.selectedOperator?:""}")
             Text(text = "timer= ${viewModel.uiState.measurementTimer.parseTime()}")
             Text(text = viewModel.uiState.description)
             Text(text = "rawSignal:")
