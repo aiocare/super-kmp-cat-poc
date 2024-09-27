@@ -1,5 +1,6 @@
 package com.aiocare.poc.flow
 
+import com.aiocare.Screens
 import com.aiocare.bluetooth.BaseAioCareDevice
 import com.aiocare.bluetooth.device.AioCareDevice
 import com.aiocare.bluetooth.deviceFactory.DeviceFactory
@@ -34,6 +35,10 @@ data class CalibrationUiState(
     val startBtn: ButtonVM = ButtonVM(visible = false, text = "start"),
     val stopBtn: ButtonVM = ButtonVM(visible = false, text = "stop"),
     val sendBtn: ButtonVM = ButtonVM(visible = false, text = "send"),
+    val navigateToSuperCatBtn: ButtonVM = ButtonVM(visible = false, text = "Nav to superCat"),
+    val settingsBtn: ButtonVM = ButtonVM(visible = false, text = "settings"),
+    val dialogData: Pair<Boolean, List<ButtonVM>>? = null,
+    val selectedOperator: String? = null,
     val note: InputData? = null,
     val devices: List<DeviceItem> = listOf(),
     val deviceInfo: DeviceInfo = DeviceInfo(),
@@ -43,7 +48,7 @@ data class CalibrationUiState(
     val realtimeData: String = "",
     val description: String = "",
     val before: EnvironmentalData = EnvironmentalData(),
-    )
+)
 
 class FlowViewModel(config: Config) :
     StatefulViewModel<CalibrationUiState>(CalibrationUiState(), config) {
@@ -57,8 +62,36 @@ class FlowViewModel(config: Config) :
     private val rawSignal = mutableListOf<IntArray>()
     private var zeroFlow: ZeroFlowData? = null
     private var beforeTime: Long? = null
-    fun init(){
+
+
+    fun init(navigate: (String) -> Unit) {
+        updateUiState {
+            copy(
+                navigateToSuperCatBtn = navigateToSuperCatBtn.copy(true) {
+                    disconnect()
+                    navigate.invoke(Screens.SuperCat.route)
+                },
+                dialogData = Pair(false, listOf("Piotr", "Milena", "Darek", "Szymon").map {
+                    ButtonVM(true, text = it, onClickAction = {
+                        val item = it
+                        updateUiState {
+                            copy(selectedOperator = item,
+                                dialogData = dialogData?.copy(false))
+                        }
+                    })
+                }),
+                settingsBtn = settingsBtn.copy(true) {
+                    updateUiState { copy(dialogData = dialogData?.copy(true)) }
+                }
+            )
+        }
         startSearching()
+    }
+
+    fun hideDialog(){
+        updateUiState {
+            copy(dialogData = dialogData?.copy(false))
+        }
     }
 
     private fun startSearching() {
@@ -81,7 +114,7 @@ class FlowViewModel(config: Config) :
         updateProgress("zeroFlow....")
         val out = mutableListOf<Int>()
         val startTime = Clock.System.now().toEpochMilliseconds()
-        val data =  coroutineScope {
+        val data = coroutineScope {
             val job = launch {
                 device!!.readFlowCommand.values.collect {
                     it.forEach {
@@ -96,7 +129,7 @@ class FlowViewModel(config: Config) :
             return@coroutineScope out
         }
         val finishTime = Clock.System.now().toEpochMilliseconds()
-        return ZeroFlowData(data, finishTime-startTime, data.size)
+        return ZeroFlowData(data, finishTime - startTime, data.size)
     }
 
 
@@ -150,7 +183,7 @@ class FlowViewModel(config: Config) :
             try {
                 device = deviceFactory.create(scan)
                 updateUiState {
-                    copy(deviceData = DeviceData(device?.name?:"", battery = 0))
+                    copy(deviceData = DeviceData(device?.name ?: "", battery = 0))
                 }
                 scanJob?.cancelAndJoin()
                 startObservingState()
@@ -220,33 +253,39 @@ class FlowViewModel(config: Config) :
                 zeroFlow = zeroFlow()
                 val temperature = device?.readSingleTemperatureCommand?.execute()
                 updateUiState {
-                    it.copy(before = before.copy(temperature = temperature?.toFloat()),
-                        description = "temperature")
+                    it.copy(
+                        before = before.copy(temperature = temperature?.toFloat()),
+                        description = "temperature"
+                    )
                 }
 
                 val pressure = device?.readPressureCommand?.execute()
                 updateUiState {
-                    it.copy(before = before.copy(pressure = pressure?.toFloat()),
-                        description = "pressure")
+                    it.copy(
+                        before = before.copy(pressure = pressure?.toFloat()),
+                        description = "pressure"
+                    )
                 }
                 val humidity = device?.readHumidityCommand?.execute()
                 updateUiState {
-                    it.copy(before = before.copy(humidity = humidity?.toFloat()),
-                        description = "humidity")
+                    it.copy(
+                        before = before.copy(humidity = humidity?.toFloat()),
+                        description = "humidity"
+                    )
                 }
                 device?.readFlowCommand?.values?.collect {
                     rawSignal.add(it)
                     updateData()
                 }
-            }catch (e: CancellationException){
+            } catch (e: CancellationException) {
                 updateUiState { copy(description = "action stopped") }
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 updateUiState { copy(description = "${e::class.simpleName} - ${e.message}") }
             }
         }
     }
 
-    private fun updateData(){
+    private fun updateData() {
         updateUiState {
             copy(
                 realtimeData = rawSignal.takeLast(15)
@@ -298,7 +337,7 @@ class FlowViewModel(config: Config) :
                 hansSerialNumber = null,
                 hansCalibrationId = null,
                 appVersion = VersionHolder.version,
-                spirometerDeviceSerial = uiState.deviceData?.name?:"",
+                spirometerDeviceSerial = uiState.deviceData?.name ?: "",
                 operator = "test",
                 date = calculateDate()
             ),
@@ -325,7 +364,7 @@ class FlowViewModel(config: Config) :
             notes = uiState.note?.value ?: "",
             totalRawSignalControlCount = null,
             totalRawSignalCount = null,
-            overallSampleLoss =  null,
+            overallSampleLoss = null,
             overallPercentageLoss = null
         )
         trySendToApi(request)

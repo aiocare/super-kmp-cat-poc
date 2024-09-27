@@ -3,16 +3,21 @@ package com.aiocare.flow
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.aiocare.KeepScreenOn
 import com.aiocare.SimpleButton
@@ -29,10 +34,23 @@ fun FlowScreen(
     BackHandler {}
     KeepScreenOn()
 
-    LaunchedEffect(Unit) { viewModel.init() }
+    LaunchedEffect(Unit) { viewModel.init{
+        navController.navigate(it)
+    } }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        ShowDialog(viewModel.uiState.dialogData) { viewModel.hideDialog() }
         Column {
+            Row {
+                SimpleButton(
+                    modifier = Modifier,
+                    buttonVM = viewModel.uiState.navigateToSuperCatBtn
+                )
+                SimpleButton(
+                    modifier = Modifier,
+                    buttonVM = viewModel.uiState.settingsBtn
+                )
+            }
             if(viewModel.uiState.deviceData != null)
                 RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name}")
 
@@ -65,10 +83,39 @@ fun FlowScreen(
                 modifier = Modifier.fillMaxWidth(),
                 buttonVM = viewModel.uiState.sendBtn
             )
+            Text(text = "operator= ${viewModel.uiState.selectedOperator}")
             Text(text = "timer= ${viewModel.uiState.measurementTimer.parseTime()}")
             Text(text = viewModel.uiState.description)
             Text(text = "rawSignal:")
             Text(text = viewModel.uiState.realtimeData)
+        }
+    }
+}
+
+@Composable
+fun ShowDialog(dialogData: Pair<Boolean, List<ButtonVM>>?, dismissDialog: () ->Unit) {
+
+    dialogData?.let {
+        if (it.first) {
+            Dialog(onDismissRequest = {
+                dismissDialog()
+            }) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        it.second.forEach {
+                            SimpleButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                buttonVM = it
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
