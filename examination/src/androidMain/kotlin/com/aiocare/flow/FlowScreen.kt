@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.aiocare.KeepScreenOn
 import com.aiocare.SimpleButton
+import com.aiocare.custom.RoundedBox
 import com.aiocare.poc.calibration.parseTime
 import com.aiocare.poc.flow.FlowViewModel
 import com.aiocare.util.ButtonVM
@@ -32,6 +33,9 @@ fun FlowScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
+            if(viewModel.uiState.deviceData != null)
+                RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name}")
+
             if (viewModel.uiState.devices.isNotEmpty())
                 Column(
                     modifier = Modifier
@@ -62,6 +66,7 @@ fun FlowScreen(
                 buttonVM = viewModel.uiState.sendBtn
             )
             Text(text = "timer= ${viewModel.uiState.measurementTimer.parseTime()}")
+            Text(text = viewModel.uiState.description)
             Text(text = "rawSignal:")
             Text(text = viewModel.uiState.realtimeData)
         }

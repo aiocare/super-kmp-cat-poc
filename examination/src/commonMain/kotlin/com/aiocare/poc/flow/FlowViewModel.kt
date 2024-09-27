@@ -8,15 +8,27 @@ import com.aiocare.bluetooth.di.inject
 import com.aiocare.mvvm.Config
 import com.aiocare.mvvm.StatefulViewModel
 import com.aiocare.mvvm.viewModelScope
+import com.aiocare.poc.VersionHolder
+import com.aiocare.poc.calibration.DeviceInfo
+import com.aiocare.poc.calibration.EnvironmentalData
+import com.aiocare.poc.ktor.Api
 import com.aiocare.poc.searchDevice.DeviceItem
+import com.aiocare.poc.superCat.ErrorChecker
 import com.aiocare.poc.superCat.InputData
+import com.aiocare.poc.superCat.SuperCatViewModel.ZeroFlowData
 import com.aiocare.poc.superCat.custom.DeviceData
+import com.aiocare.supercat.PhoneInfo
 import com.aiocare.util.ButtonVM
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
 data class CalibrationUiState(
     val startBtn: ButtonVM = ButtonVM(visible = false, text = "start"),
@@ -24,11 +36,14 @@ data class CalibrationUiState(
     val sendBtn: ButtonVM = ButtonVM(visible = false, text = "send"),
     val note: InputData? = null,
     val devices: List<DeviceItem> = listOf(),
+    val deviceInfo: DeviceInfo = DeviceInfo(),
     val deviceData: DeviceData? = null,
     val disconnectBtn: ButtonVM = ButtonVM(visible = false, text = "disconnect"),
     val measurementTimer: Int = 0,
     val realtimeData: String = "",
-)
+    val description: String = "",
+    val before: EnvironmentalData = EnvironmentalData(),
+    )
 
 class FlowViewModel(config: Config) :
     StatefulViewModel<CalibrationUiState>(CalibrationUiState(), config) {
@@ -40,7 +55,8 @@ class FlowViewModel(config: Config) :
     private var timerJob: Job? = null
     private var actionJob: Job? = null
     private val rawSignal = mutableListOf<IntArray>()
-
+    private var zeroFlow: ZeroFlowData? = null
+    private var beforeTime: Long? = null
     fun init(){
         startSearching()
     }
@@ -61,6 +77,29 @@ class FlowViewModel(config: Config) :
         }
     }
 
+    private suspend fun zeroFlow(): ZeroFlowData {
+        updateProgress("zeroFlow....")
+        val out = mutableListOf<Int>()
+        val startTime = Clock.System.now().toEpochMilliseconds()
+        val data =  coroutineScope {
+            val job = launch {
+                device!!.readFlowCommand.values.collect {
+                    it.forEach {
+                        out.add(it)
+                    }
+                }
+            }
+            val userJob: Deferred<Unit> = async { delay(5000) }
+            userJob.await()
+            job.cancelAndJoin()
+            ErrorChecker.checkZeroFlowAndThrow(out)
+            return@coroutineScope out
+        }
+        val finishTime = Clock.System.now().toEpochMilliseconds()
+        return ZeroFlowData(data, finishTime-startTime, data.size)
+    }
+
+
     private fun startObservingState() {
         viewModelScope.launch {
             device?.observeConnectionStateCommand?.values?.collect {
@@ -71,6 +110,9 @@ class FlowViewModel(config: Config) :
                     startSearching()
                     updateUiState {
                         copy(
+                            startBtn = startBtn.copy(visible = false),
+                            stopBtn = stopBtn.copy(visible = false),
+                            sendBtn = sendBtn.copy(visible = false),
                             deviceData = null,
                             disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                             measurementTimer = 0
@@ -91,6 +133,9 @@ class FlowViewModel(config: Config) :
             startSearching()
             updateUiState {
                 copy(
+                    startBtn = startBtn.copy(visible = false),
+                    stopBtn = stopBtn.copy(visible = false),
+                    sendBtn = sendBtn.copy(visible = false),
                     deviceData = null,
                     disconnectBtn = uiState.disconnectBtn.copy(visible = false),
                     measurementTimer = 0
@@ -104,9 +149,13 @@ class FlowViewModel(config: Config) :
         viewModelScope.launch {
             try {
                 device = deviceFactory.create(scan)
+                updateUiState {
+                    copy(deviceData = DeviceData(device?.name?:"", battery = 0))
+                }
                 scanJob?.cancelAndJoin()
                 startObservingState()
                 val battery = device?.readBatteryCommand?.execute() ?: 0
+                beforeTime = Clock.System.now().toEpochMilliseconds()
                 updateUiState {
                     copy(
                         deviceData = DeviceData(scan.name, battery),
@@ -133,19 +182,18 @@ class FlowViewModel(config: Config) :
                         sendBtn = sendBtn.copy(
                             visible = false,
                             onClickAction = {
-                                send()
+                                actionJob?.cancel()
+                                actionJob = viewModelScope.launch {
+                                    send()
+                                }
                             }
                         ),
                     )
                 }
             } catch (e: Exception) {
-//                updateUiState {
-//                    copy(
-//                        zeroFlowDialog = ZeroFlowDialogData("${e::class.simpleName} ${e.message}") {
-//                            updateUiState { copy(zeroFlowDialog = null) }
-//                        },
-//                    )
-//                }
+                updateUiState {
+                    copy(description = "${e::class.simpleName} ${e.message}")
+                }
             }
         }
     }
@@ -164,9 +212,36 @@ class FlowViewModel(config: Config) :
             }
         }
         actionJob = viewModelScope.launch {
-            device?.readFlowCommand?.values?.collect{
-                rawSignal.add(it)
-                updateData()
+            updateUiState {
+                it.copy(realtimeData = "")
+            }
+            rawSignal.clear()
+            try {
+                zeroFlow = zeroFlow()
+                val temperature = device?.readSingleTemperatureCommand?.execute()
+                updateUiState {
+                    it.copy(before = before.copy(temperature = temperature?.toFloat()),
+                        description = "temperature")
+                }
+
+                val pressure = device?.readPressureCommand?.execute()
+                updateUiState {
+                    it.copy(before = before.copy(pressure = pressure?.toFloat()),
+                        description = "pressure")
+                }
+                val humidity = device?.readHumidityCommand?.execute()
+                updateUiState {
+                    it.copy(before = before.copy(humidity = humidity?.toFloat()),
+                        description = "humidity")
+                }
+                device?.readFlowCommand?.values?.collect {
+                    rawSignal.add(it)
+                    updateData()
+                }
+            }catch (e: CancellationException){
+                updateUiState { copy(description = "action stopped") }
+            }catch (e: Exception){
+                updateUiState { copy(description = "${e::class.simpleName} - ${e.message}") }
             }
         }
     }
@@ -190,8 +265,88 @@ class FlowViewModel(config: Config) :
         }
     }
 
-    private fun send() {
+    private fun updateProgress(description: String) {
+        updateUiState {
+            copy(description = description)
+        }
+    }
 
+    private fun calculateDate(): String {
+        return Clock.System.now().toString()
+    }
+
+    private suspend fun send() {
+
+        val temperature = device?.readSingleTemperatureCommand?.execute()
+        updateUiState {
+            it.copy(description = "temperature")
+        }
+
+        val pressure = device?.readPressureCommand?.execute()
+        updateUiState {
+            it.copy(description = "pressure")
+        }
+        val humidity = device?.readHumidityCommand?.execute()
+        updateUiState {
+            it.copy(description = "humidity")
+        }
+
+        val request = Api.PostData(
+            environment = Api.Environment(
+                recordingDevice = PhoneInfo().getPhoneModel(),
+                hansIpAddress = null,
+                hansSerialNumber = null,
+                hansCalibrationId = null,
+                appVersion = VersionHolder.version,
+                spirometerDeviceSerial = uiState.deviceData?.name?:"",
+                operator = "test",
+                date = calculateDate()
+            ),
+            environmentalParamBefore = Api.Env(
+                temperature = uiState.before.temperature!!,
+                pressure = uiState.before.pressure!!,
+                humidity = uiState.before.humidity!!,
+                timestamp = beforeTime!!
+            ),
+            environmentalParamAfter = Api.Env(
+                temperature = temperature!!.toFloat(),
+                pressure = pressure!!.toFloat(),
+                humidity = humidity!!.toFloat(),
+                timestamp = Clock.System.now().toEpochMilliseconds()
+            ),
+            zeroFlowData = zeroFlow!!.zeroFlow,
+            zeroFlowDataTime = zeroFlow!!.zeroFlowDataTime,
+            zeroFlowDataCount = zeroFlow!!.zeroFlowDataCounter,
+            steadyFlowRawData = null,
+            waveformRawData = null,
+            flowRawData = Api.FlowRawData(rawSignal.flatMap { it.toList() }),
+            type = "FLOW",
+            rawDataType = "FLOW",
+            notes = uiState.note?.value ?: "",
+            totalRawSignalControlCount = null,
+            totalRawSignalCount = null,
+            overallSampleLoss =  null,
+            overallPercentageLoss = null
+        )
+        trySendToApi(request)
+    }
+
+    private suspend fun trySendToApi(request: Api.PostData) {
+        try {
+            val response = Api().postNewRawData(request)
+            updateProgress(response)
+        } catch (e: Exception) {
+            updateUiState {
+                copy(
+                    description = "${e::class.simpleName} - ${e.message}"
+//                    repeatSendingDialog = DialogData({
+//                        GlobalScope.launch { trySendToApi(request) }
+//                    }, {
+//                        updateUiState { copy(repeatSendingDialog = null) }
+//                    })
+                )
+            }
+        }
     }
 
 }

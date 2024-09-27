@@ -602,7 +602,7 @@ class SuperCatViewModel(
         return Clock.System.now().toString()
     }
 
-    private data class ZeroFlowData(
+    data class ZeroFlowData(
         val zeroFlow: List<Int>,
         val zeroFlowDataTime: Long,
         val zeroFlowDataCounter: Int)
@@ -709,7 +709,8 @@ class SuperCatViewModel(
             totalRawSignalControlCount = totalCount,
             totalRawSignalCount = totalRawSignal,
             overallSampleLoss =  totalCount - totalRawSignal,
-            overallPercentageLoss = percentageLoss
+            overallPercentageLoss = percentageLoss,
+            flowRawData = null
         )
         trySendToApi(request)
     }

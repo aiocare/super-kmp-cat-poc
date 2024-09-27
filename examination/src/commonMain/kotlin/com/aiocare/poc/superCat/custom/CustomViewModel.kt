@@ -549,7 +549,8 @@ class CustomViewModel(
             totalRawSignalControlCount = 0,
             totalRawSignalCount = 0,
             overallSampleLoss =  0,
-            overallPercentageLoss = 0.0
+            overallPercentageLoss = 0.0,
+            flowRawData = null
         )
         trySendToApi(request)
     }
