@@ -102,7 +102,7 @@ fun SuperCatScreen(viewModel: SuperCatViewModel, navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(scrollState)
+                .horizontalScroll(rememberScrollState())
         ) {
             SimpleButton(buttonVM = viewModel.uiState.showInitAgain)
             SimpleButton(buttonVM = viewModel.uiState.navCustomBtn)
