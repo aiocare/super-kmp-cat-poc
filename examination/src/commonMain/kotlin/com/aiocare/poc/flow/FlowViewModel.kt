@@ -49,6 +49,7 @@ data class CalibrationUiState(
     val realtimeData: String = "",
     val description: String = "",
     val before: EnvironmentalData = EnvironmentalData(),
+    val refreshing: Boolean = false,
 )
 
 class FlowViewModel(config: Config) :
@@ -164,13 +165,14 @@ class FlowViewModel(config: Config) :
         }
     }
 
+    fun updateProgress(refreshing: Boolean){
+        updateUiState { copy(refreshing = refreshing) }
+    }
+
     private fun disconnect() {
-//        updateProgress("disconnect")
-//        updateSequenceName("")
         viewModelScope.launch {
             timerJob?.cancelAndJoin()
             actionJob?.cancelAndJoin()
-//            getIConnect().disconnect()
             startSearching()
             updateUiState {
                 copy(
@@ -187,6 +189,7 @@ class FlowViewModel(config: Config) :
 
 
     private fun scanClicked(scan: BaseAioCareDevice) {
+        updateProgress(true)
         viewModelScope.launch {
             try {
                 device = deviceFactory.create(scan)
@@ -197,6 +200,7 @@ class FlowViewModel(config: Config) :
                 startObservingState()
                 val battery = device?.readBatteryCommand?.execute() ?: 0
                 beforeTime = Clock.System.now().toEpochMilliseconds()
+                updateProgress(false)
                 updateUiState {
                     copy(
                         deviceData = DeviceData(scan.name, battery),
@@ -232,6 +236,7 @@ class FlowViewModel(config: Config) :
                     )
                 }
             } catch (e: Exception) {
+                updateProgress(false)
                 updateUiState {
                     copy(description = "${e::class.simpleName} ${e.message}")
                 }
@@ -400,11 +405,6 @@ class FlowViewModel(config: Config) :
             updateUiState {
                 copy(
                     description = "${e::class.simpleName} - ${e.message}"
-//                    repeatSendingDialog = DialogData({
-//                        GlobalScope.launch { trySendToApi(request) }
-//                    }, {
-//                        updateUiState { copy(repeatSendingDialog = null) }
-//                    })
                 )
             }
         }

@@ -8,15 +8,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -43,7 +46,8 @@ fun FlowScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         ShowDialog(viewModel.uiState.dialogData) { viewModel.hideDialog() }
-        Column {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())) {
             Row {
                 SimpleButton(
                     modifier = Modifier,
@@ -56,7 +60,9 @@ fun FlowScreen(
             }
             if(viewModel.uiState.deviceData != null)
                 RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name}")
-
+            SimpleButton(
+                modifier = Modifier.fillMaxWidth(),
+                buttonVM = viewModel.uiState.disconnectBtn)
             if (viewModel.uiState.devices.isNotEmpty())
                 Column(
                     modifier = Modifier
@@ -98,6 +104,12 @@ fun FlowScreen(
             Text(text = "rawSignal:")
             Text(text = viewModel.uiState.realtimeData)
         }
+        if (viewModel.uiState.refreshing)
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(64.dp),
+            )
     }
 }
 
