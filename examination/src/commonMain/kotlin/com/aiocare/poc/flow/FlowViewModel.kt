@@ -299,8 +299,13 @@ class FlowViewModel(config: Config) :
                 }
             } catch (e: CancellationException) {
                 updateUiState { copy(description = "action stopped") }
+                stop()
+                updateUiState { copy(sendBtn = sendBtn.copy(false)) }
             } catch (e: Exception) {
+                timerJob?.cancel()
                 updateUiState { copy(description = "${e::class.simpleName} - ${e.message}") }
+                stop()
+                updateUiState { copy(sendBtn = sendBtn.copy(false)) }
             }
         }
     }
