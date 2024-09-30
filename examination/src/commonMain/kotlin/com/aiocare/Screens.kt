@@ -3,6 +3,7 @@ package com.aiocare
 sealed class Screens(val route: String) {
     data object Intro : Screens("Intro")
     data object Custom : Screens("Custom")
+    data object Flow : Screens("Flow")
     data object SearchDevice : Screens("SearchDevice")
     data object Cat : Screens("Cat")
     data object HansInput : Screens("HansInput")

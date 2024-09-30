@@ -99,9 +99,14 @@ fun SuperCatScreen(viewModel: SuperCatViewModel, navController: NavController) {
         if(viewModel.uiState.deviceData != null)
             RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name} battery =${viewModel.uiState.deviceData?.battery}%")
         val scrollState = rememberScrollState()
-        Row {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+        ) {
             SimpleButton(buttonVM = viewModel.uiState.showInitAgain)
             SimpleButton(buttonVM = viewModel.uiState.navCustomBtn)
+            SimpleButton(buttonVM = viewModel.uiState.navFlowBtn)
         }
         Row(
             modifier = Modifier

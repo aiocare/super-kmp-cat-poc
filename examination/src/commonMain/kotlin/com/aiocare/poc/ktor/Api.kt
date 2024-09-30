@@ -83,23 +83,26 @@ class Api {
         val zeroFlowData: List<Int>,
         val zeroFlowDataTime: Long,
         val zeroFlowDataCount: Int,
-        val totalRawSignalControlCount: Int,
-        val totalRawSignalCount: Int,
-        val overallSampleLoss: Int,
-        val overallPercentageLoss: Double,
+        val totalRawSignalControlCount: Int?,
+        val totalRawSignalCount: Int?,
+        val overallSampleLoss: Int?,
+        val overallPercentageLoss: Double?,
         val steadyFlowRawData: List<SteadyFlowData>?,
         val waveformRawData: List<WaveformData>?,
+        val flowRawData: FlowRawData?,
         val type: String,
         val rawDataType: String,
         val notes: String
     )
 
     @Serializable
+    data class FlowRawData(val rawSignal: List<Int>)
+    @Serializable
     data class Environment(
         val recordingDevice: String,
-        val hansIpAddress: String,
-        val hansSerialNumber: String,
-        val hansCalibrationId: String,
+        val hansIpAddress: String?,
+        val hansSerialNumber: String?,
+        val hansCalibrationId: String?,
         val date: String,
         val appVersion: String,
         val spirometerDeviceSerial: String,

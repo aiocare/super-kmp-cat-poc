@@ -76,6 +76,7 @@ data class SuperCatUiState(
     val zeroFlowDialog: ZeroFlowDialogData? = null,
     val showInitAgain: ButtonVM = ButtonVM(true, "Settings") {},
     val navCustomBtn: ButtonVM = ButtonVM(false, "Nav to custom") {},
+    val navFlowBtn: ButtonVM = ButtonVM(false, "Nav to flow") {},
     val deviceData: DeviceData? = null
 )
 
@@ -184,6 +185,13 @@ class SuperCatViewModel(
                     onClickAction = {
                         disconnect()
                         navigate(Screens.Custom.route)
+                    }
+                ),
+                navFlowBtn = uiState.navFlowBtn.copy(
+                    visible = true,
+                    onClickAction = {
+                        disconnect()
+                        navigate(Screens.Flow.route)
                     }
                 )
             )
@@ -594,7 +602,7 @@ class SuperCatViewModel(
         return Clock.System.now().toString()
     }
 
-    private data class ZeroFlowData(
+    data class ZeroFlowData(
         val zeroFlow: List<Int>,
         val zeroFlowDataTime: Long,
         val zeroFlowDataCounter: Int)
@@ -701,7 +709,8 @@ class SuperCatViewModel(
             totalRawSignalControlCount = totalCount,
             totalRawSignalCount = totalRawSignal,
             overallSampleLoss =  totalCount - totalRawSignal,
-            overallPercentageLoss = percentageLoss
+            overallPercentageLoss = percentageLoss,
+            flowRawData = null
         )
         trySendToApi(request)
     }
