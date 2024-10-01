@@ -59,7 +59,7 @@ fun FlowScreen(
                 )
             }
             if(viewModel.uiState.deviceData != null)
-                RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name}")
+                RoundedBox(title = "Connected device", description = "${viewModel.uiState.deviceData?.name} battery =${viewModel.uiState.deviceData?.battery}%")
             SimpleButton(
                 modifier = Modifier.fillMaxWidth(),
                 buttonVM = viewModel.uiState.disconnectBtn)

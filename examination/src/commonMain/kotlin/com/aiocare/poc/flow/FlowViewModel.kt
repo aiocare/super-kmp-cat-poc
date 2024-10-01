@@ -193,17 +193,17 @@ class FlowViewModel(config: Config) :
         viewModelScope.launch {
             try {
                 device = deviceFactory.create(scan)
+                val battery = device?.readBatteryCommand?.execute()
                 updateUiState {
-                    copy(deviceData = DeviceData(device?.name ?: "", battery = 0))
+                    copy(deviceData = DeviceData(device?.name ?: "", battery = battery?:0))
                 }
                 scanJob?.cancelAndJoin()
                 startObservingState()
-                val battery = device?.readBatteryCommand?.execute() ?: 0
                 beforeTime = Clock.System.now().toEpochMilliseconds()
                 updateProgress(false)
                 updateUiState {
                     copy(
-                        deviceData = DeviceData(scan.name, battery),
+                        deviceData = DeviceData(scan.name, battery?:0),
                         devices = listOf(),
                         disconnectBtn = disconnectBtn.copy(
                             visible = true,
