@@ -98,11 +98,11 @@ fun FlowScreen(
                 value = viewModel.uiState.note.value,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
                 onValueChange = { viewModel.uiState.note.onValueChanged.invoke(it) })
-            RoundedBox(title = "operator", description = viewModel.uiState.selectedOperator?:"")
-            RoundedBox(title = "timer", description = viewModel.uiState.measurementTimer.parseTime())
+            Text(text = "operator= ${viewModel.uiState.selectedOperator?:""}")
+            Text(text = "timer= ${viewModel.uiState.measurementTimer.parseTime()}")
             if(viewModel.uiState.description.isNotEmpty())
-                RoundedBox(title = "current action", description = viewModel.uiState.description)
-            RoundedBox(title = "zeroFlow", description = viewModel.uiState.zeroFlowValue)
+                Text(text = viewModel.uiState.description)
+            Text(text = viewModel.uiState.zeroFlowValue )
             RoundedBox(title = "rawSignal", description = viewModel.uiState.realtimeData)
         }
         if (viewModel.uiState.refreshing)
