@@ -50,6 +50,7 @@ data class CalibrationUiState(
     val description: String = "",
     val before: EnvironmentalData = EnvironmentalData(),
     val refreshing: Boolean = false,
+    val zeroFlowValue: String = ""
 )
 
 class FlowViewModel(config: Config) :
@@ -135,6 +136,7 @@ class FlowViewModel(config: Config) :
             userJob.await()
             job.cancelAndJoin()
             ErrorChecker.checkZeroFlowAndThrow(out)
+            updateUiState { copy(zeroFlowValue = "zeroFlow average = ${out.average()}") }
             return@coroutineScope out
         }
         val finishTime = Clock.System.now().toEpochMilliseconds()
@@ -160,6 +162,7 @@ class FlowViewModel(config: Config) :
                             measurementTimer = 0
                         )
                     }
+                    clearUiAfterDisconnecting()
                 }
             }
         }
@@ -174,19 +177,24 @@ class FlowViewModel(config: Config) :
             timerJob?.cancelAndJoin()
             actionJob?.cancelAndJoin()
             startSearching()
-            updateUiState {
-                copy(
-                    startBtn = startBtn.copy(visible = false),
-                    stopBtn = stopBtn.copy(visible = false),
-                    sendBtn = sendBtn.copy(visible = false),
-                    deviceData = null,
-                    disconnectBtn = uiState.disconnectBtn.copy(visible = false),
-                    measurementTimer = 0
-                )
-            }
+            clearUiAfterDisconnecting()
         }
     }
 
+    private fun clearUiAfterDisconnecting(){
+        updateUiState {
+            copy(
+                startBtn = startBtn.copy(visible = false),
+                stopBtn = stopBtn.copy(visible = false),
+                sendBtn = sendBtn.copy(visible = false),
+                deviceData = null,
+                disconnectBtn = uiState.disconnectBtn.copy(visible = false),
+                measurementTimer = 0,
+                realtimeData = "",
+                zeroFlowValue = ""
+            )
+        }
+    }
 
     private fun scanClicked(scan: BaseAioCareDevice) {
         updateProgress(true)
@@ -245,8 +253,12 @@ class FlowViewModel(config: Config) :
     }
 
     private fun start() {
+        rawSignal.clear()
         updateUiState {
             copy(
+                measurementTimer = 0,
+                realtimeData = "",
+                zeroFlowValue = "",
                 startBtn = startBtn.copy(false),
                 stopBtn = stopBtn.copy(true),
                 sendBtn = sendBtn.copy(false)

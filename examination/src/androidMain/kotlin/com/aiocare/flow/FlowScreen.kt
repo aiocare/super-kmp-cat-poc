@@ -100,7 +100,9 @@ fun FlowScreen(
                 onValueChange = { viewModel.uiState.note.onValueChanged.invoke(it) })
             Text(text = "operator= ${viewModel.uiState.selectedOperator?:""}")
             Text(text = "timer= ${viewModel.uiState.measurementTimer.parseTime()}")
-            Text(text = viewModel.uiState.description)
+            if(viewModel.uiState.description.isNotEmpty())
+                Text(text = viewModel.uiState.description)
+            Text(text = viewModel.uiState.zeroFlowValue )
             Text(text = "rawSignal:")
             Text(text = viewModel.uiState.realtimeData)
         }
