@@ -414,7 +414,6 @@ class CustomViewModel(
         val api = HansProxyApi(uiState.url?.value ?: "", TimeoutTypes.NORMAL)
         api.waveformLoad(HansCommand.waveform(sequence))
         api.command(HansCommand.reset())
-
         val recordedRawSignal = mutableListOf<Int>()
         var recordJob: Job?
         val temperature = api.command(HansCommand.readTemperature())
