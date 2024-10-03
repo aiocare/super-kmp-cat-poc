@@ -50,7 +50,7 @@ kotlin {
                 implementation("com.aiocare:sdk:0.7.46-extended_delay")
 //                implementation("com.aiocare.cortex:cortex:+")
 //                implementation("com.aiocare.models:common-models:+")
-                implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+                implementation("com.github.PhilJay:MPAndroidChart:2.2.4")
                 implementation("com.jstarczewski.kstate:kstate-core:0.0.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("com.patrykandpatrick.vico:core:1.8.0")
