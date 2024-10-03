@@ -99,7 +99,7 @@ kotlin {
         val androidMain by getting {
             dependsOn(mobileMain)
             dependencies {
-                implementation("com.google.code.gson:gson:2.10.1")
+                implementation("com.google.code.gson:gson:2.11.0")
             }
         }
         val androidUnitTest by getting
