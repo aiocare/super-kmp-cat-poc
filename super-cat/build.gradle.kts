@@ -3,7 +3,7 @@ plugins {
     kotlin("native.cocoapods")
     id("com.android.library")
     id("org.jlleitschuh.gradle.ktlint")
-    kotlin("plugin.serialization").version("1.9.20")
+    kotlin("plugin.serialization").version("2.0.21")
     id("org.jetbrains.dokka")
 }
 
